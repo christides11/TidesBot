@@ -177,9 +177,9 @@ namespace TidesBotDotNet.Modules
         }
 
         [Command("Say")]
-        public async Task Say(string message)
+        public async Task Say(params string[] message)
         {
-            await Context.Channel.SendMessageAsync(message);
+            await Context.Channel.SendMessageAsync(String.Join(' ', message));
         }
 
         private async Task UserInfo(SocketGuildUser user)
