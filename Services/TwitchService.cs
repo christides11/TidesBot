@@ -55,6 +55,7 @@ namespace TidesBotDotNet.Services
             if (twitchKeys == null)
             {
                 twitchKeys = new TwitchKeys();
+                SaveLoadService.Save(twitchKeysFilename, twitchKeys);
             }
             api.Settings.ClientId = twitchKeys.clientID;
             api.Settings.Secret = twitchKeys.secret;
@@ -209,7 +210,7 @@ namespace TidesBotDotNet.Services
 
             monitorService.AddTrackedUsers(users.Distinct().ToArray());
 
-            SaveLoadService.Save(twitchGuildInfoFilename, JsonConvert.SerializeObject(guilds));
+            SaveLoadService.Save(twitchGuildInfoFilename, guilds);
         }
 
         private async void OnStreamOnline(object sender, OnStreamArgs e)

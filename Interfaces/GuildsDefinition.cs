@@ -14,10 +14,11 @@ namespace TidesBotDotNet.Interfaces
 
         public GuildsDefinition()
         {
-            string f = SaveLoadService.Load(FILE_NAME);
-            if(f != null)
+            settings = SaveLoadService.Load<Dictionary<ulong, GuildSettings>>(FILE_NAME);
+            if(settings == null)
             {
-                settings = JsonConvert.DeserializeObject<Dictionary<ulong, GuildSettings>>(f);
+                settings = new Dictionary<ulong, GuildSettings>();
+                SaveLoadService.Save(FILE_NAME, settings);
             }
         }
 
@@ -32,7 +33,7 @@ namespace TidesBotDotNet.Interfaces
 
         public void SaveSettings()
         {
-            SaveLoadService.Save(FILE_NAME, JsonConvert.SerializeObject(settings));
+            SaveLoadService.Save(FILE_NAME, settings);
         }
     }
 }

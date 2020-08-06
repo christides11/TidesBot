@@ -58,17 +58,18 @@ namespace TidesBotDotNet.Services
             this.api = api;
 
             //Load the info for streams that have been reported on.
-            string monitoredUsersResult = SaveLoadService.Load(monitoredUsersFilename);
-            if (monitoredUsersResult != null)
+            //string monitoredUsersResult = SaveLoadService.Load(monitoredUsersFilename);
+            Dictionary<string, Stream> monitoredChannels = SaveLoadService.Load<Dictionary<string, Stream>>(monitoredUsersFilename);
+            if(monitoredChannels == null)
             {
-                Dictionary<string, Stream> monitoredChannels = JsonConvert.DeserializeObject<Dictionary<string, Stream>>(monitoredUsersResult);
+                monitoredChannels = new Dictionary<string, Stream>();
+                SaveLoadService.Save(monitoredUsersFilename, monitoredChannels);
+            }
 
-                LiveStreams.Clear();
-
-                foreach (var key in monitoredChannels.Keys)
-                {
-                    LiveStreams.TryAdd(key, monitoredChannels[key]);
-                }
+            LiveStreams.Clear();
+            foreach (var key in monitoredChannels.Keys)
+            {
+                LiveStreams.TryAdd(key, monitoredChannels[key]);
             }
 
             // Call the check with the given interval between the calls.
@@ -187,7 +188,7 @@ namespace TidesBotDotNet.Services
 
             Cleanup(liveUsers);
 
-            SaveLoadService.Save(monitoredUsersFilename, JsonConvert.SerializeObject(LiveStreams));
+            SaveLoadService.Save(monitoredUsersFilename, LiveStreams);
         }
 
         /// <summary>

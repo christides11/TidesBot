@@ -224,7 +224,14 @@ namespace TidesBotDotNet.Services
             if (!args.Reason.ShouldPlayNext())
                 return;
 
+            // No users are in the channel, stop playing and leave.
+            if((args.Player.VoiceChannel as SocketVoiceChannel).Users.Count == 0)
+            {
+                await LeaveChannel(args.Player.VoiceChannel.Guild, args.Player.VoiceChannel);
+                return;
+            }
             
+            // Check if we should loop the track that ended.
             DJGuildInfo guild = null;
             if (guildInfo.TryGetValue(args.Player.VoiceChannel.Guild, out guild))
             {
@@ -236,13 +243,16 @@ namespace TidesBotDotNet.Services
                 }
             }
 
+            // Couldn't find the guild, leave channel.
             if(guild == null)
             {
+                await LeaveChannel(args.Player.VoiceChannel.Guild, args.Player.VoiceChannel);
                 return;
             }
 
             guild.OnNextTrack();
 
+            // There was no next track, leave channel.
             if (guild.currentlyPlaying == null)
             {
                 await LeaveChannel(args.Player.VoiceChannel.Guild, args.Player.VoiceChannel);
