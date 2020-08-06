@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace TidesBotDotNet.Services
 {
@@ -42,6 +43,29 @@ namespace TidesBotDotNet.Services
                 Console.WriteLine($"Exception thrown while loading {path}. {e.Message}");
             }
             return null;
+        }
+
+        public static T Load<T>(string path)
+        {
+            try
+            {
+                string p = Path.Combine(Directory.GetCurrentDirectory(), path);
+                if (File.Exists(p))
+                {
+                    string jsonString = null;
+                    using (StreamReader streamReader = File.OpenText(p))
+                    {
+                        jsonString = streamReader.ReadToEnd();
+                    }
+                    return JsonConvert.DeserializeObject<T>(jsonString);
+                }
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Exception thrown while loading {path}. {e.Message}");
+            }
+            return default(T);
         }
     }
 }

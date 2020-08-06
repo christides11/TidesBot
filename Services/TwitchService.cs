@@ -51,7 +51,11 @@ namespace TidesBotDotNet.Services
             }
             this.client = client;
             api = new TwitchAPI();
-            TwitchKeys twitchKeys = JsonConvert.DeserializeObject<TwitchKeys>(SaveLoadService.Load(twitchKeysFilename));
+            TwitchKeys twitchKeys = SaveLoadService.Load<TwitchKeys>(twitchKeysFilename);
+            if (twitchKeys == null)
+            {
+                twitchKeys = new TwitchKeys();
+            }
             api.Settings.ClientId = twitchKeys.clientID;
             api.Settings.Secret = twitchKeys.secret;
             monitorService = new LiveStreamMonitorService(api, 300);
