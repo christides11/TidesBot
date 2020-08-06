@@ -98,7 +98,7 @@ namespace TidesBotDotNet.Modules
         }
 
         [Command("avatar")]
-        [Summary("Gets the avatar of the user(s). Size MUST be a multiple of 32." +
+        [Summary("Gets the avatar of the user(s). Size must be a power of 2 between 16 and 2048." +
             "You do not have to @ the user(s), just type their username(s).")]
         public async Task Avatar(ushort size, params string[] users)
         {
