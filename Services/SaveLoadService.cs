@@ -23,6 +23,22 @@ namespace TidesBotDotNet.Services
             }
         }
 
+        public static void Save<T>(string fileName, T obj)
+        {
+            string jsonObject = JsonConvert.SerializeObject(obj);
+            try
+            {
+                using (StreamWriter streamWriter = File.CreateText(Path.Combine(Directory.GetCurrentDirectory(), fileName)))
+                {
+                    streamWriter.Write(jsonObject);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Exception thrown while saving {fileName}. {e.Message}");
+            }
+        }
+
         public static string Load(string path)
         {
             try
