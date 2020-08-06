@@ -29,6 +29,7 @@ namespace TidesBotDotNet.Modules
         [Summary("Gives the user a color based on the hexcode given.")]
         public async Task ColorMe(string color)
         {
+            // Check if this guild supports ColorMe.
             if (!guildsDefinition.GetSettings(Context.Guild.Id).colorMe)
             {
                 await Context.Channel.SendMessageAsync("ColorMe is not enabled for this server.");
@@ -36,6 +37,7 @@ namespace TidesBotDotNet.Modules
             }
 
             string roleName = ("colorme" + Context.User.Id);
+            // Check if the color is valid.
             Discord.Color roleColor = new Discord.Color();
             try
             {
@@ -46,7 +48,9 @@ namespace TidesBotDotNet.Modules
                 await Context.Channel.SendMessageAsync("Invalid hex code.");
                 return;
             }
+            // Check if the user already has a color role.
             IRole colorRole = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
+            // Get where this role should go so it works, which is right above their current role.
             int highestRole = Context.Guild.GetUser(Context.User.Id).Roles.LastOrDefault(x => x.Name != roleName).Position+1;
 
             // Create the role if needed.
@@ -164,11 +168,13 @@ namespace TidesBotDotNet.Modules
                 return;
             }
 
+            // If they don't specify a user, print the info for themselves.
             if(users.Count() == 0)
             {
                 users = new string[] { Context.User.Username };
             }
 
+            // Print the info for the wanted user.
             SocketGuildUser wantedUser = Context.Guild.Users.FirstOrDefault(x => x.Username.ToLower() == users[0].ToLower());
             if(wantedUser != null)
             {
