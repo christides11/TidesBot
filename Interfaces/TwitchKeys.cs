@@ -8,5 +8,7 @@ namespace TidesBotDotNet.Interfaces
     {
         public string clientID;
         public string secret;
+        public string accessToken;
+
     }
 }
