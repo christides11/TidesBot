@@ -61,7 +61,7 @@ namespace TidesBotDotNet
             lavaConfig = new LavaConfig();
             lavaNode = new LavaNode(client, lavaConfig);
 
-            reactionRoleService = new ReactionRoleService(client);
+            reactionRoleService = new ReactionRoleService(client, guildsDefinition);
 
             commandService = new CommandService();
             commandHandler = new CommandHandler(BuildServiceProvider(), client, commandService, botDefinition);

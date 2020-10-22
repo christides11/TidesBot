@@ -23,9 +23,9 @@ namespace TidesBotDotNet.Services
             }
         }
 
-        public static void Save<T>(string fileName, T obj)
+        public static void Save<T>(string fileName, T obj, Formatting jsonFormat = Formatting.None)
         {
-            string jsonObject = JsonConvert.SerializeObject(obj);
+            string jsonObject = JsonConvert.SerializeObject(obj, jsonFormat);
             try
             {
                 using (StreamWriter streamWriter = File.CreateText(Path.Combine(Directory.GetCurrentDirectory(), fileName)))
