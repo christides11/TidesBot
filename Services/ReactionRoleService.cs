@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
@@ -49,13 +50,13 @@ namespace TidesBotDotNet.Services
             string msgGroup = "";
             foreach (string group in guildsDefinition.reactRoles[chn.Guild.Id].Keys)
             {
-                if (guildsDefinition.reactRoles[chn.Guild.Id][group].FirstOrDefault(x => x.messageID == reaction.MessageId
-                && x.emoji == reaction.Emote.ToString()) != null)
+                var x = guildsDefinition.reactRoles[chn.Guild.Id][group].FirstOrDefault(x => x.messageID == reaction.MessageId
+                && CompareEmote(x.emoji, reaction.Emote.ToString()));
+                if (x != null)
                 {
                     foundMessage = true;
                     msgGroup = group;
-                    rrDef = guildsDefinition.reactRoles[chn.Guild.Id][group].FirstOrDefault(x => x.messageID == reaction.MessageId
-                        && x.emoji == reaction.Emote.ToString());
+                    rrDef = x;
                     break;
                 }
             }
@@ -70,6 +71,24 @@ namespace TidesBotDotNet.Services
             {
                 await RemoveRole(realRole, chn.Guild, reaction.UserId);
             }
+        }
+
+        private bool CompareEmote(string emoji, string gotEmote)
+        {
+            if(emoji == gotEmote)
+            {
+                return true;
+            }
+            string aEmoteGot = emoji;
+            if(emoji[1] == 'a')
+            {
+                emoji = emoji.Remove(1,1);
+            }
+            if(emoji == gotEmote)
+            {
+                return true;
+            }
+            return false;
         }
 
         /// <summary>

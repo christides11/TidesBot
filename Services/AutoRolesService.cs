@@ -66,7 +66,6 @@ namespace TidesBotDotNet.Services
                 try
                 {
                     await user.Guild.GetUser(user.Id).AddRolesAsync(new List<SocketRole>() { realRole });
-                    Console.WriteLine($"Gave user {user.Nickname} role {realRole}.");
                 }
                 catch (Exception e)
                 {
