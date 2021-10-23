@@ -32,45 +32,48 @@ namespace TidesBotDotNet.Services
 
         private async Task ReactionRemoved(Cacheable<IUserMessage, ulong> before, ISocketMessageChannel after, SocketReaction reaction)
         {
-            if (reaction.User.Value.IsBot)
+            var t = Task.Factory.StartNew(async () =>
             {
-                return;
-            }
-
-            var chn = reaction.Channel as SocketGuildChannel;
-
-            if (!guildsDefinition.reactRoles.ContainsKey(chn.Guild.Id))
-            {
-                return;
-            }
-
-            // Check if the message exist.
-            bool foundMessage = false;
-            ReactRolesDefinition rrDef = null;
-            string msgGroup = "";
-            foreach (string group in guildsDefinition.reactRoles[chn.Guild.Id].Keys)
-            {
-                var x = guildsDefinition.reactRoles[chn.Guild.Id][group].FirstOrDefault(x => x.messageID == reaction.MessageId
-                && CompareEmote(x.emoji, reaction.Emote.ToString()));
-                if (x != null)
+                if (reaction.User.Value.IsBot)
                 {
-                    foundMessage = true;
-                    msgGroup = group;
-                    rrDef = x;
-                    break;
+                    return;
                 }
-            }
-            if (!foundMessage)
-            {
-                return;
-            }
 
-            // REMOVE ROLE //
-            SocketRole realRole = chn.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == rrDef.role.ToLower());
-            if (realRole != null)
-            {
-                await RemoveRole(realRole, chn.Guild, reaction.UserId);
-            }
+                var chn = reaction.Channel as SocketGuildChannel;
+
+                if (!guildsDefinition.reactRoles.ContainsKey(chn.Guild.Id))
+                {
+                    return;
+                }
+
+                // Check if the message exist.
+                bool foundMessage = false;
+                ReactRolesDefinition rrDef = null;
+                string msgGroup = "";
+                foreach (string group in guildsDefinition.reactRoles[chn.Guild.Id].Keys)
+                {
+                    var x = guildsDefinition.reactRoles[chn.Guild.Id][group].FirstOrDefault(x => x.messageID == reaction.MessageId
+                    && CompareEmote(x.emoji, reaction.Emote.ToString()));
+                    if (x != null)
+                    {
+                        foundMessage = true;
+                        msgGroup = group;
+                        rrDef = x;
+                        break;
+                    }
+                }
+                if (!foundMessage)
+                {
+                    return;
+                }
+
+                // REMOVE ROLE //
+                SocketRole realRole = chn.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == rrDef.role.ToLower());
+                if (realRole != null)
+                {
+                    await RemoveRole(realRole, chn.Guild, reaction.UserId);
+                }
+            });
         }
 
         private bool CompareEmote(string emoji, string gotEmote)
@@ -161,6 +164,30 @@ namespace TidesBotDotNet.Services
                 {
                     await AssignRole(realRole, chn.Guild, reaction.UserId);
                 }
+            }
+        }
+
+        public async Task RefreshRoles(SocketGuild guild)
+        {
+            if (!guildsDefinition.reactRoles.ContainsKey(guild.Id))
+            {
+                return;
+            }
+
+            foreach (string group in guildsDefinition.reactRoles[guild.Id].Keys)
+            {
+                //Emote emote = 
+                //await message.AddReactionAsync(emote);
+                /*
+                if (guildsDefinition.reactRoles[guild.Id][group].FirstOrDefault(x => x.messageID == reaction.MessageId
+                && x.emoji == reaction.Emote.ToString()) != null)
+                {
+                    foundMessage = true;
+                    msgGroup = group;
+                    rrDef = guildsDefinition.reactRoles[guild.Id][group].FirstOrDefault(x => x.messageID == reaction.MessageId
+                        && x.emoji == reaction.Emote.ToString());
+                    break;
+                }*/
             }
         }
 

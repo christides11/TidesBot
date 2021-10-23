@@ -152,24 +152,24 @@ namespace TidesBotDotNet.Services
         {
             try
             {
-                var search = await lavaNode.SearchAsync(query);
+                var search = await lavaNode.SearchAsync(Victoria.Responses.Search.SearchType.YouTube, query);
 
-                if (search.LoadStatus == Victoria.Enums.LoadStatus.NoMatches)
+                if (search.Status == Victoria.Responses.Search.SearchStatus.NoMatches)
                 {
                     search = await lavaNode.SearchYouTubeAsync(query);
 
-                    if (search.LoadStatus == Victoria.Enums.LoadStatus.NoMatches)
+                    if (search.Status == Victoria.Responses.Search.SearchStatus.NoMatches)
                     {
                         search = await lavaNode.SearchSoundCloudAsync(query);
 
-                        if (search.LoadStatus == Victoria.Enums.LoadStatus.NoMatches)
+                        if (search.Status == Victoria.Responses.Search.SearchStatus.NoMatches)
                         {
                             return $"Sorry, I couldn't find any matches for {query}.";
                         }
                     }
                 }
 
-                if(search.LoadStatus == Victoria.Enums.LoadStatus.LoadFailed)
+                if(search.Status == Victoria.Responses.Search.SearchStatus.LoadFailed)
                 {
                     return $"Sorry, loading the result failed.";
                 }
@@ -221,7 +221,7 @@ namespace TidesBotDotNet.Services
 
         private async Task OnTrackEndedAsync(TrackEndedEventArgs args)
         {
-            if (!args.Reason.ShouldPlayNext())
+            if (args.Reason != Victoria.Enums.TrackEndReason.Finished)
                 return;
 
             // No users are in the channel, stop playing and leave.

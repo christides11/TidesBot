@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using TwitchLib.Api.Helix.Models.Streams;
+using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users;
 using TwitchLib.Api.Interfaces;
 using TwitchLib.Api.Services;
@@ -86,6 +87,10 @@ namespace TidesBotDotNet.Services
         /// <returns>A list of the successfully added users.</returns>
         public async Task<List<string>> AddTrackedUsers(params string[] usernames)
         {
+            if(usernames == null || usernames.Length == 0)
+            {
+                return new List<string>();
+            }
             List<string> addedUsers = new List<string>();
             try
             {
@@ -121,8 +126,10 @@ namespace TidesBotDotNet.Services
             {
                 if (usersBeingTracked.Remove(usernames[i]))
                 {
-                    removedUsers.Add(usernames[i]);
-                    LiveStreams.TryRemove(usernames[i], out Stream v);
+                    if (LiveStreams.TryRemove(usernames[i], out Stream v))
+                    {
+                        removedUsers.Add(usernames[i]);
+                    }
                 }
             }
             return removedUsers;
@@ -133,6 +140,7 @@ namespace TidesBotDotNet.Services
             usersBeingTracked.Clear();
         }
 
+        bool ticking = false;
         /// <summary>
         /// Checks which users are live, along with who has gone offline.
         /// </summary>
@@ -140,6 +148,11 @@ namespace TidesBotDotNet.Services
         /// <param name="e"></param>
         private async void Tick(object sender, ElapsedEventArgs e)
         {
+            if(ticking == true)
+            {
+                return;
+            }
+            ticking = true;
             List<string> liveUsers = new List<string>();
             var s = await GetStreams();
             if(s != null)
@@ -184,9 +197,10 @@ namespace TidesBotDotNet.Services
                         }
                     }
                 }
-            }
 
-            Cleanup(liveUsers);
+                Cleanup(liveUsers);
+            }
+            ticking = false;
 
             SaveLoadService.Save(monitoredUsersFilename, LiveStreams);
         }
@@ -219,14 +233,14 @@ namespace TidesBotDotNet.Services
         /// <returns>A list of all the live streams.</returns>
         public async Task<Stream[]> GetStreams()
         {
-            if(usersBeingTracked.Count() == 0)
+            if(usersBeingTracked == null || usersBeingTracked.Count() == 0)
             {
                 return null;
             }
 
             try
             {
-                var liveStreams = await api.Helix.Streams.GetStreamsAsync(null, null, 100, null, null, 
+                GetStreamsResponse liveStreams = await api.Helix.Streams.GetStreamsAsync(null, null, 100, null, null, 
                     "live", null, usersBeingTracked.ToList());
                 return liveStreams.Streams;
             }catch(Exception e)

@@ -164,5 +164,6 @@ namespace TidesBotDotNet.Modules
             }
             await Context.Channel.SendMessageAsync(result);
         }
+
     }
 }

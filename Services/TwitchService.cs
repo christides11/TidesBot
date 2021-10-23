@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Streams;
+using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Services;
 using TwitchLib.Api.Services.Events;
 using TwitchLib.Api.Services.Events.LiveStreamMonitor;

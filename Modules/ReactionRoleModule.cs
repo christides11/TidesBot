@@ -31,6 +31,15 @@ namespace TidesBotDotNet.Modules
 
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
+        [Command("remove")]
+        [Alias("r")]
+        public async Task RefreshReactions()
+        {
+            await roleService.RefreshRoles(Context.Guild);
+        }
+
+        [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
         [Command("add")]
         [Alias("a")]
         [Summary("Makes reacting to the given emote on the given message assign the user a role. Roles within the same group " +
