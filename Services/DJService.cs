@@ -36,9 +36,9 @@ namespace TidesBotDotNet.Services
                 PlayNext();
             }
 
-            public void Enqueue(string username, LavaTrack track)
+            public void Enqueue(SocketUser user, LavaTrack track)
             {
-                queue.Add(new DJQueueItem(username, track));
+                queue.Add(new DJQueueItem(user, track));
             }
 
             public DJQueueItem Dequeue()
@@ -69,12 +69,17 @@ namespace TidesBotDotNet.Services
         /// </summary>
         public class DJQueueItem
         {
-            public string username;
+            public SocketUser user;
             public LavaTrack track;
 
-            public DJQueueItem(string username, LavaTrack track)
+            public DJQueueItem()
             {
-                this.username = username;
+
+            }
+
+            public DJQueueItem(SocketUser user, LavaTrack track)
+            {
+                this.user = user;
                 this.track = track;
             }
         }
@@ -97,12 +102,12 @@ namespace TidesBotDotNet.Services
 
         private async Task OnWebSocketClosed(WebSocketClosedEventArgs arg)
         {
-            Console.WriteLine($"Websocket closed. {arg.Reason}.");
+            Console.WriteLine($"Websocket closed: {arg.Reason}.");
         }
 
         private async Task OnTrackExceptionAsync(TrackExceptionEventArgs arg)
         {
-            Console.WriteLine($"{arg.Track} causes exception. {arg.ErrorMessage}.");
+            Console.WriteLine($"{arg.Track} causes exception: {arg.ErrorMessage}.");
         }
 
         private async Task OnTrackStuckAsync(TrackStuckEventArgs arg)
@@ -147,52 +152,22 @@ namespace TidesBotDotNet.Services
             return $"Left {voiceChannel.Name}.";
         }
 
-        public async Task<string> PlayQuery(string username,IGuild guild, IVoiceChannel voiceChannel, 
+        public async Task<string> PlayQuery(SocketUser username, IGuild guild, IVoiceChannel voiceChannel, 
             ITextChannel textChannel, string query)
         {
             try
             {
-                var search = await lavaNode.SearchAsync(Victoria.Responses.Search.SearchType.YouTube, query);
+                var search = Uri.IsWellFormedUriString(query, UriKind.Absolute) ? await lavaNode.SearchAsync(Victoria.Responses.Search.SearchType.Direct, query)
+                    : await lavaNode.SearchAsync(Victoria.Responses.Search.SearchType.YouTube, query);
 
-                if (search.Status == Victoria.Responses.Search.SearchStatus.NoMatches)
-                {
-                    search = await lavaNode.SearchYouTubeAsync(query);
-
-                    if (search.Status == Victoria.Responses.Search.SearchStatus.NoMatches)
-                    {
-                        search = await lavaNode.SearchSoundCloudAsync(query);
-
-                        if (search.Status == Victoria.Responses.Search.SearchStatus.NoMatches)
-                        {
-                            return $"Sorry, I couldn't find any matches for {query}.";
-                        }
-                    }
-                }
-
-                if(search.Status == Victoria.Responses.Search.SearchStatus.LoadFailed)
-                {
-                    return $"Sorry, loading the result failed.";
-                }
+                if(search.Status == Victoria.Responses.Search.SearchStatus.LoadFailed) return $"Sorry, failed to load query.";
 
                 LavaTrack track = null;
-                if(search.Tracks.FirstOrDefault(x => x.Url.Trim().Contains(query.Trim())) != null)
-                {
-                    track = search.Tracks.FirstOrDefault(x => x.Url.Trim().Contains(query.Trim()));
-                }
-                else
-                {
-                    track = search.Tracks.FirstOrDefault();
-                }
+                track = search.Tracks.FirstOrDefault();
 
-                if(track == null)
-                {
-                    return "Sorry, can't get the track.";
-                }
+                if (track == null) return "Sorry, can't find the track.";
 
-                var player = lavaNode.HasPlayer(guild)
-                    ? lavaNode.GetPlayer(guild)
-                    : await lavaNode.JoinAsync(voiceChannel, textChannel);
-
+                var player = lavaNode.HasPlayer(guild) ? lavaNode.GetPlayer(guild) : await lavaNode.JoinAsync(voiceChannel, textChannel);
 
                 if (!guildInfo.TryGetValue(guild, out var g))
                 {
@@ -205,13 +180,13 @@ namespace TidesBotDotNet.Services
                 currentGuild.Enqueue(username, track);
                 if (player.PlayerState == Victoria.Enums.PlayerState.Playing)
                 {
-                    return $"Enqueued `{track.Title}.`";
+                    return $"**Enqueued** `{track.Title}`";
                 }
                 else
                 {
                     currentGuild.PlayNext();
                     await player.PlayAsync(currentGuild.currentlyPlaying.track);
-                    return $"Playing `{track.Title}`.";
+                    return $"**Playing** 🎶 `{track.Title}`";
                 }
             }catch(Exception e)
             {
@@ -238,7 +213,7 @@ namespace TidesBotDotNet.Services
                 if (guild.loopSong == true)
                 {
                     await args.Player.PlayAsync(args.Track);
-                    await args.Player.TextChannel.SendMessageAsync($"Now looping `{args.Track.Title}`.");
+                    await args.Player.TextChannel.SendMessageAsync($"**Looping** 🎶 `{args.Track.Title}`");
                     return;
                 }
             }
@@ -261,7 +236,7 @@ namespace TidesBotDotNet.Services
 
             LavaTrack track = guild.currentlyPlaying.track as LavaTrack;
             await args.Player.PlayAsync(track);
-            await args.Player.TextChannel.SendMessageAsync($"Now playing `{track.Title}`.");
+            await args.Player.TextChannel.SendMessageAsync($"**Playing** 🎶`{track.Title}`");
         }
 
         public List<DJQueueItem> GetQueue(IGuild guild)
@@ -294,13 +269,19 @@ namespace TidesBotDotNet.Services
 
         public DJQueueItem GetCurrentlyPlaying(SocketGuild guild)
         {
-            DJGuildInfo g = null;
-            if (!guildInfo.TryGetValue(guild, out g))
+            if (!lavaNode.HasPlayer(guild))
             {
                 return null;
             }
 
-            return g.currentlyPlaying;
+            LavaPlayer lPlayer = lavaNode.GetPlayer(guild);
+
+            if (!guildInfo.TryGetValue(guild, out var g))
+            {
+                return null;
+            }
+
+            return new DJQueueItem { user = g.currentlyPlaying.user, track = lPlayer.Track };
         }
 
         public async Task<string> VoteToSkip(IGuild guild, string username)
@@ -311,37 +292,36 @@ namespace TidesBotDotNet.Services
             }
 
             LavaPlayer lPlayer = lavaNode.GetPlayer(guild);
-            if(guildInfo.TryGetValue(guild, out var g))
+            if (!guildInfo.TryGetValue(guild, out var g))
             {
-                if(g.currentlyPlaying == null)
-                {
-                    return "Nothing is currently playing";
-                }
-
-                bool userVoted = g.skipVotes.Contains(username.ToLower());
-
-                if (!userVoted)
-                {
-                    g.skipVotes.Add(username.ToLower());
-                }
-
-                int usersInCall = (g.voiceChannel as SocketVoiceChannel).Users.Count-1;
-                int minVotes = Math.Max(1, (int)(usersInCall / 2));
-                if (g.skipVotes.Contains(g.currentlyPlaying.username))
-                {
-                    int reachedVotes = g.skipVotes.Count;
-                    await lPlayer.SeekAsync(g.currentlyPlaying.track.Duration);
-                    return $"Requester {g.currentlyPlaying.username} voted, skipping.";
-                }
-                else if (g.skipVotes.Count >= minVotes)
-                {
-                    int reachedVotes = g.skipVotes.Count;
-                    await lPlayer.SeekAsync(g.currentlyPlaying.track.Duration);
-                    return $"{reachedVotes}/{minVotes} votes reached, skipping.";
-                }
-                return userVoted ? $"{username} has already voted." : $"{username} voted to skip. {g.skipVotes.Count}/{minVotes}.";
+                return "Not able to skip.";
             }
-            return "Not able to skip.";
+            if(g.currentlyPlaying == null)
+            {
+                return "Nothing is currently playing";
+            }
+
+            bool userVoted = g.skipVotes.Contains(username.ToLower());
+            if (!userVoted)
+            {
+                g.skipVotes.Add(username.ToLower());
+            }
+
+            int usersInCall = (g.voiceChannel as SocketVoiceChannel).Users.Count-1;
+            int minVotes = Math.Max(1, (int)(usersInCall / 2));
+            if (g.skipVotes.Contains(g.currentlyPlaying.user.Username.ToLower()))
+            {
+                int reachedVotes = g.skipVotes.Count;
+                await lPlayer.SeekAsync(g.currentlyPlaying.track.Duration);
+                return $"Requester {g.currentlyPlaying.user} voted, skipping.";
+            }
+            else if (g.skipVotes.Count >= minVotes)
+            {
+                int reachedVotes = g.skipVotes.Count;
+                await lPlayer.SeekAsync(g.currentlyPlaying.track.Duration);
+                return $"{reachedVotes}/{minVotes} votes reached, skipping.";
+            }
+            return userVoted ? $"{username} has already voted." : $"{username} voted to skip. {g.skipVotes.Count}/{minVotes}.";
         }
 
         public async Task<string> SeekTime(IGuild guild, TimeSpan time)

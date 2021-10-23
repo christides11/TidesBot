@@ -46,9 +46,17 @@ namespace TidesBotDotNet.Modules
         [Alias("p")]
         public async Task PlayMusic([Remainder]string link)
         {
-            string result = await djService.PlayQuery(Context.User.Username.ToLower(), Context.Guild, 
+            string result = await djService.PlayQuery(Context.User, Context.Guild, 
                 (Context.User as IVoiceState).VoiceChannel, Context.Channel as ITextChannel, link.Trim());
             await Context.Message.Channel.SendMessageAsync(result);
+        }
+
+        [Command("search")]
+        [Summary("Searches youtube using the given query")]
+        [Alias("s")]
+        public async Task Search([Remainder] string query)
+        {
+            await Context.Message.Channel.SendMessageAsync("To be implemented.");
         }
 
         [Command("queue")]
@@ -65,19 +73,19 @@ namespace TidesBotDotNet.Modules
 
             EmbedBuilder output = new EmbedBuilder();
 
-            output.WithTitle("Queue");
+            output.WithTitle($"Queue ({queue.Count} Entries)");
+            output.WithColor(Color.DarkBlue);
 
             var currentTrack = djService.GetCurrentlyPlaying(Context.Guild);
 
-            output.AddField($"Currently Playing " +
-                $"({currentTrack.track.Position.ToString(@"hh\:mm\:ss")}/{currentTrack.track.Duration}) by {currentTrack.username}:", 
-                $"[{currentTrack.track.Title}]({currentTrack.track.Url})");
+            output.AddField($"Now Playing: {currentTrack.track.Title}",
+                $"[link]({currentTrack.track.Url}) {(currentTrack.track.Duration - currentTrack.track.Position).ToString(@"hh\:mm\:ss")} left [{currentTrack.user.Mention}]");
 
             int trackPosition = 1;
             foreach(var queueItem in queue)
             {
                 var track = queueItem.track as LavaTrack;
-                output.AddField($"{trackPosition}. {track.Duration} by {currentTrack.username}", $"[{track.Title}]({track.Url})");
+                output.AddField($"{trackPosition}. {track.Title}", $"[link]({track.Url}) {track.Duration} [{queueItem.user.Mention}]");
                 trackPosition++;
             }
 
@@ -98,8 +106,8 @@ namespace TidesBotDotNet.Modules
             }
 
             await Context.Channel.SendMessageAsync(
-                $"Currently Playing `{currentTrack.track.Title}` ({currentTrack.track.Position.ToString(@"hh\:mm\:ss")}" +
-                $"/{currentTrack.track.Duration}) by {currentTrack.username}.");
+                $"**Currently Playing** 🎶 `{currentTrack.track.Title}` ({currentTrack.track.Position.ToString(@"hh\:mm\:ss")}" +
+                $"/{currentTrack.track.Duration}) [{currentTrack.user.Mention}]");
         }
 
         [Command("remove")]
