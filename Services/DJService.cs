@@ -10,12 +10,14 @@ using System.Text;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
 using Victoria;
-using Victoria.EventArgs;
+using Victoria.Node;
+using Victoria.Player;
 
 namespace TidesBotDotNet.Services
 {
     public class DJService
     {
+        /*
         public class DJGuildInfo
         {
             public bool loopSong = false;
@@ -84,7 +86,7 @@ namespace TidesBotDotNet.Services
             }
         }
 
-        private LavaConfig lavaConfig;
+        private NodeConfiguration lavaConfig;
         private LavaNode lavaNode;
 
         private ConcurrentDictionary<IGuild, DJGuildInfo> guildInfo = new ConcurrentDictionary<IGuild, DJGuildInfo>();
@@ -93,7 +95,7 @@ namespace TidesBotDotNet.Services
         {
             this.lavaConfig = lavaConfig;
             this.lavaNode = lavaNode;
-            this.lavaNode.OnTrackEnded += OnTrackEndedAsync;
+            this.lavaNode.OnTrackEnd += OnTrackEndedAsync;
             this.lavaNode.OnTrackStuck += OnTrackStuckAsync;
             this.lavaNode.OnTrackException += OnTrackExceptionAsync;
             this.lavaNode.OnWebSocketClosed += OnWebSocketClosed;
@@ -383,6 +385,6 @@ namespace TidesBotDotNet.Services
                 return g.loopSong ? $"Looping enabled." : $"Looping disabled.";
             }
             return "Can't toggle looping.";
-        }
+        }*/
     }
 }

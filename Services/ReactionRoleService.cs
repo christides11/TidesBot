@@ -25,12 +25,12 @@ namespace TidesBotDotNet.Services
             client.ReactionsCleared += ReactionCleared;
         }
 
-        private async Task ReactionCleared(Cacheable<IUserMessage, ulong> before, ISocketMessageChannel after)
+        private async Task ReactionCleared(Cacheable<IUserMessage, ulong> before, Cacheable<IMessageChannel, ulong> after)
         {
 
         }
 
-        private async Task ReactionRemoved(Cacheable<IUserMessage, ulong> before, ISocketMessageChannel after, SocketReaction reaction)
+        private async Task ReactionRemoved(Cacheable<IUserMessage, ulong> before, Cacheable<IMessageChannel, ulong> after, SocketReaction reaction)
         {
             var t = Task.Factory.StartNew(async () =>
             {
@@ -101,7 +101,7 @@ namespace TidesBotDotNet.Services
         /// <param name="after"></param>
         /// <param name="reaction"></param>
         /// <returns></returns>
-        private async Task ReactionAdded(Cacheable<IUserMessage, ulong> before, ISocketMessageChannel after, SocketReaction reaction)
+        private async Task ReactionAdded(Cacheable<IUserMessage, ulong> before, Cacheable<IMessageChannel, ulong> after, SocketReaction reaction)
         {
             if (reaction.User.Value.IsBot)
             {

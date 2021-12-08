@@ -24,6 +24,7 @@ namespace TidesBotDotNet.Modules
             this.client = client;
         }
 
+        /*
         [Command("join")]
         [Summary("Joins the voice channel.")]
         public async Task Join()
@@ -171,7 +172,7 @@ namespace TidesBotDotNet.Modules
                 Console.WriteLine(e.ToString());
             }
             await Context.Channel.SendMessageAsync(result);
-        }
+        }*/
 
     }
 }
