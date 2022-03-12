@@ -32,6 +32,8 @@ namespace TidesBotDotNet
 
         private Microsoft.Extensions.Logging.Logger<LavaNode> lavaLogger;
 
+        private AutoRolesService autoRoleService;
+
         public IServiceProvider BuildServiceProvider() => new ServiceCollection()
             .AddSingleton(botDefinition)
             .AddSingleton(client)
@@ -40,6 +42,7 @@ namespace TidesBotDotNet
             .AddSingleton(lavaNode)
             .AddSingleton(guildsDefinition)
             .AddSingleton(reactionRoleService)
+            .AddSingleton(autoRoleService)
             .AddSingleton<DJService>()
             .BuildServiceProvider();
 
@@ -54,10 +57,15 @@ namespace TidesBotDotNet
 
             guildsDefinition = new GuildsDefinition();
 
+            var cfg = new DiscordSocketConfig();
+            cfg.GatewayIntents |= GatewayIntents.GuildMembers;
+            cfg.GatewayIntents |= GatewayIntents.GuildMessageReactions;
+
             client = new DiscordSocketClient(new DiscordSocketConfig
             {
                 LogLevel = LogSeverity.Info,
-                MessageCacheSize = 100
+                MessageCacheSize = 100,
+                GatewayIntents = GatewayIntents.All
             });
 
             client.Log += Log;
@@ -66,6 +74,7 @@ namespace TidesBotDotNet
             lavaConfig = new NodeConfiguration();
             lavaNode = new LavaNode(client, lavaConfig, lavaLogger);
 
+            autoRoleService = new AutoRolesService(client);
             reactionRoleService = new ReactionRoleService(client, guildsDefinition);
 
             commandService = new CommandService();

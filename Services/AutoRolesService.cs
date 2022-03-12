@@ -39,10 +39,12 @@ namespace TidesBotDotNet.Services
             }
 
             client.UserJoined += OnUserJoinedGuild;
+            Console.WriteLine("Auto-Role Service Initialized");
         }
 
         private async Task OnUserJoinedGuild(SocketGuildUser user)
         {
+            Console.WriteLine($"User {user.Username} joined {user.Guild.Name}.");
             AutoRolesGuildDefinition arg = autoRoles.FirstOrDefault(x => x.guildID == user.Guild.Id);
             // Guild doesn't auto assign any roles.
             if(arg == null)
@@ -54,6 +56,7 @@ namespace TidesBotDotNet.Services
             {
                 await GiveRole(user, role);
             }
+            Console.WriteLine($"Gave {user.Username} {arg.roles.Count} roles.");
         }
 
         public async Task GiveRole(SocketGuildUser user, string role)
@@ -61,7 +64,7 @@ namespace TidesBotDotNet.Services
             SocketRole realRole = user.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
 
             // If the user doesn't have the role, give it to them.
-            if (user.Guild.GetUser(user.Id).Roles.FirstOrDefault(x => x.Name == realRole.Name) == null)
+            if (user.Guild.GetUser(user.Id).Roles.FirstOrDefault(x => x.Name.ToLower() == realRole.Name.ToLower()) == null)
             {
                 try
                 {
@@ -72,6 +75,8 @@ namespace TidesBotDotNet.Services
                 {
                     Console.WriteLine($"Could not give user role! " + e.Message);
                 }
+            } else {
+                Console.WriteLine("User already has role");
             }
         }
 

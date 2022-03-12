@@ -7,22 +7,31 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TidesBotDotNet.Services;
+using static TidesBotDotNet.Services.AutoRolesService;
 
 namespace TidesBotDotNet.Modules
 {
     [Group("autoroles")]
     public class AutoRolesModule : ModuleBase<SocketCommandContext>
     {
-        public static AutoRolesService autoRolesService;
+        public AutoRolesService autoRolesService;
         private DiscordSocketClient client;
 
-        public AutoRolesModule(DiscordSocketClient client)
+        public AutoRolesModule(AutoRolesService autoRoleService, DiscordSocketClient client)
         {
-            if(autoRolesService == null)
-            {
-                autoRolesService = new AutoRolesService(client);
-            }
+            this.autoRolesService = autoRoleService;
             this.client = client;
+        }
+
+        [Command("roles")]
+        [Summary("List the roles that are assigned when a user joins.")]
+        public async Task Roles () {
+            AutoRolesGuildDefinition arg = autoRolesService.autoRoles.FirstOrDefault(x => x.guildID == Context.Guild.Id);
+            if(arg == null) {
+                await Context.Channel.SendMessageAsync("No roles are currently being handled.");
+                return;
+            }
+            await Context.Channel.SendMessageAsync(string.Join(',', arg.roles));
         }
 
         [Command("addrole")]
