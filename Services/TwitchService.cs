@@ -4,15 +4,10 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
 using TwitchLib.Api;
-using TwitchLib.Api.Helix.Models.Streams;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
-using TwitchLib.Api.Services;
-using TwitchLib.Api.Services.Events;
-using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 
 namespace TidesBotDotNet.Services
 {
@@ -235,7 +230,9 @@ namespace TidesBotDotNet.Services
                         }
 
                         //Grab data on the stream and user.
-                        var userChannel = (await api.V5.Channels.GetChannelByIDAsync(e.Stream.UserId));
+                        //var userChannel = (await api.V5.Channels.GetChannelByIDAsync(e.Stream.UserId));
+                        //var userChannel = (await api.Helix.Channels.Getchann(e.Stream.UserId));
+                        var uc = await api.Helix.Users.GetUsersFollowsAsync(null, null, 1, null, e.Stream.UserId);
                         var sGame = (await api.Helix.Games.GetGamesAsync(new List<string>() { e.Stream.GameId }));
                         var streamGame = sGame.Games.Count() > 0 ? sGame.Games[0] : null;
                         var streamGameName = streamGame == null ? "?" : streamGame.Name;
@@ -255,7 +252,7 @@ namespace TidesBotDotNet.Services
 
                         output.Footer = new EmbedFooterBuilder
                         {
-                            Text = $"{userChannel.Followers} followers, {userChannel.Views} total views."
+                            Text = $"{uc.TotalFollows} followers."
                         };
 
                         switch (guild.previewMode)

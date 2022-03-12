@@ -1,17 +1,11 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
-using TwitchLib.Api.Helix.Models.Streams;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
-using TwitchLib.Api.Helix.Models.Users;
 using TwitchLib.Api.Interfaces;
-using TwitchLib.Api.Services;
-using TwitchLib.Api.Services.Core.LiveStreamMonitor;
-using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 
 namespace TidesBotDotNet.Services
 {
