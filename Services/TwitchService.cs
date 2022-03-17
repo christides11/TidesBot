@@ -255,7 +255,7 @@ namespace TidesBotDotNet.Services
                         switch (guild.previewMode)
                         {
                             case 1:
-                                output.WithImageUrl($"{e.Stream.ThumbnailUrl.Replace("{width}", "1280").Replace("{height}", "720")}?{getrandom.Next(0, int.MaxValue)}");
+                                output.WithImageUrl($"{e.Stream.ThumbnailUrl.Replace("{width}", "1280").Replace("{height}", "720")}?{e.Stream.UserName}.{e.Stream.ViewerCount}.{timeLive.TotalMinutes}.{getrandom.Next(0, int.MaxValue)}");
                                 if (streamGame != null)
                                 {
                                     string boxArtURL = streamGame.BoxArtUrl.Replace("{width}", "425").Replace("{height}", "550");
