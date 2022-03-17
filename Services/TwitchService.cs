@@ -38,6 +38,9 @@ namespace TidesBotDotNet.Services
 
         public List<TwitchGuildDefinition> guilds = new List<TwitchGuildDefinition>();
 
+        //Function to get random number
+        private static readonly Random getrandom = new Random();
+
         public TwitchService(DiscordSocketClient client)
         {
             if (!serviceEnabled)
@@ -205,7 +208,7 @@ namespace TidesBotDotNet.Services
                 users.AddRange(guild.users);
             }
 
-            monitorService.AddTrackedUsers(users.Distinct().ToArray());
+            _ = monitorService.AddTrackedUsers(users.Distinct().ToArray());
 
             SaveLoadService.Save(twitchGuildInfoFilename, guilds);
         }
@@ -219,19 +222,14 @@ namespace TidesBotDotNet.Services
                     //If the user should be reported on in this guild.
                     if (!String.IsNullOrEmpty(guild.users.Find(x => x.ToLower() == e.Stream.UserName.ToLower())))
                     {
-                        //Get the text channel.
                         var textChannel = client.GetGuild(guild.guildID).TextChannels.FirstOrDefault(x => x.Id == guild.textChannelID);
 
-                        //Channel doesn't exist, skip this one.
                         if (textChannel == null)
                         {
                             Console.WriteLine($"Text channel {guild.textChannelID} in {guild.guildID} does not exist.");
                             continue;
                         }
 
-                        //Grab data on the stream and user.
-                        //var userChannel = (await api.V5.Channels.GetChannelByIDAsync(e.Stream.UserId));
-                        //var userChannel = (await api.Helix.Channels.Getchann(e.Stream.UserId));
                         var uc = await api.Helix.Users.GetUsersFollowsAsync(null, null, 1, null, e.Stream.UserId);
                         var sGame = (await api.Helix.Games.GetGamesAsync(new List<string>() { e.Stream.GameId }));
                         var streamGame = sGame.Games.Count() > 0 ? sGame.Games[0] : null;
@@ -243,7 +241,6 @@ namespace TidesBotDotNet.Services
                         string timeLiveString = timeLive.TotalMinutes < 60 ? $"{(int)timeLive.TotalMinutes} minutes."
                             : $"{hoursUp} hours, {minutesUp} minutes.";
 
-                        //Build the message.
                         var output = new EmbedBuilder()
                             .WithTitle($"{e.Stream.UserName} is online!")
                             .AddField($"Playing {streamGameName}", $"[{e.Stream.Title}](https://www.twitch.tv/{e.Stream.UserName})")
@@ -258,7 +255,7 @@ namespace TidesBotDotNet.Services
                         switch (guild.previewMode)
                         {
                             case 1:
-                                output.WithImageUrl($"{e.Stream.ThumbnailUrl.Replace("{width}", "1280").Replace("{height}", "720")}?{DateTime.UtcNow.Minute}");
+                                output.WithImageUrl($"{e.Stream.ThumbnailUrl.Replace("{width}", "1280").Replace("{height}", "720")}?{getrandom.Next(0, int.MaxValue)}");
                                 if (streamGame != null)
                                 {
                                     string boxArtURL = streamGame.BoxArtUrl.Replace("{width}", "425").Replace("{height}", "550");

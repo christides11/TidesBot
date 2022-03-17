@@ -1,16 +1,12 @@
 ﻿using Discord;
 using Discord.Commands;
-using Discord.Net;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
-using TidesBotDotNet.Modules;
 using TidesBotDotNet.Services;
-using Victoria;
 using Victoria.Node;
 
 namespace TidesBotDotNet
@@ -57,9 +53,9 @@ namespace TidesBotDotNet
 
             guildsDefinition = new GuildsDefinition();
 
-            var cfg = new DiscordSocketConfig();
-            cfg.GatewayIntents |= GatewayIntents.GuildMembers;
-            cfg.GatewayIntents |= GatewayIntents.GuildMessageReactions;
+            //var cfg = new DiscordSocketConfig();
+            //cfg.GatewayIntents |= GatewayIntents.GuildMembers;
+            //cfg.GatewayIntents |= GatewayIntents.GuildMessageReactions;
 
             client = new DiscordSocketClient(new DiscordSocketConfig
             {
