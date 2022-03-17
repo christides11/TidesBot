@@ -53,16 +53,15 @@ namespace TidesBotDotNet
 
             guildsDefinition = new GuildsDefinition();
 
-            //var cfg = new DiscordSocketConfig();
-            //cfg.GatewayIntents |= GatewayIntents.GuildMembers;
-            //cfg.GatewayIntents |= GatewayIntents.GuildMessageReactions;
+            var cfg = new DiscordSocketConfig();
+            cfg.LogLevel = LogSeverity.Info;
+            cfg.MessageCacheSize = 100;
+            cfg.GatewayIntents = GatewayIntents.All 
+                & ~(GatewayIntents.GuildPresences 
+                | GatewayIntents.GuildScheduledEvents 
+                | GatewayIntents.GuildInvites);
 
-            client = new DiscordSocketClient(new DiscordSocketConfig
-            {
-                LogLevel = LogSeverity.Info,
-                MessageCacheSize = 100,
-                GatewayIntents = GatewayIntents.All
-            });
+            client = new DiscordSocketClient(cfg);
 
             client.Log += Log;
             client.Ready += OnReadyAsync;
