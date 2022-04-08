@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
@@ -19,7 +20,7 @@ namespace TidesBotDotNet
         private CommandService commandService;
         private CommandHandler commandHandler;
         private NodeConfiguration lavaConfig;
-        private LavaNode lavaNode;
+        private LavaNode<LavaPlayer, LavaTrack> lavaNode;
 
         private BotDefinition botDefinition;
         private GuildsDefinition guildsDefinition;
@@ -28,9 +29,8 @@ namespace TidesBotDotNet
 
         private string token;
 
-        private Microsoft.Extensions.Logging.Logger<LavaNode> lavaLogger;
-
         private AutoRolesService autoRoleService;
+        private ILogger<LavaNode<LavaPlayer, LavaTrack>> logger;
 
         public IServiceProvider BuildServiceProvider() => new ServiceCollection()
             .AddSingleton(botDefinition)
@@ -69,7 +69,7 @@ namespace TidesBotDotNet
             client.Ready += OnReadyAsync;
 
             lavaConfig = new NodeConfiguration();
-            lavaNode = new LavaNode(client, lavaConfig, lavaLogger);
+            lavaNode = new LavaNode<LavaPlayer, LavaTrack>(client, lavaConfig, null);
 
             autoRoleService = new AutoRolesService(client);
             reactionRoleService = new ReactionRoleService(client, guildsDefinition);
@@ -85,11 +85,6 @@ namespace TidesBotDotNet
 
             // Block this task until the program is closed.
             await Task.Delay(-1);
-        }
-
-        private async Task OnTrackEnded(TrackEndEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
-        {
-            Console.WriteLine("???");
         }
 
         private bool LoadBotDefinition()
@@ -161,6 +156,11 @@ namespace TidesBotDotNet
                 Console.WriteLine(json);
             }
             */
+        }
+
+        private async Task OnTrackEnded(TrackEndEventArg<LavaPlayer, LavaTrack> arg)
+        {
+            Console.WriteLine("???");
         }
     }
 }
