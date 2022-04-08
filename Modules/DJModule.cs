@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using TidesBotDotNet.Services;
 using TwitchLib.Api;
 using Victoria;
+using Victoria.Player;
 
 namespace TidesBotDotNet.Modules
 {
@@ -24,7 +25,6 @@ namespace TidesBotDotNet.Modules
             this.client = client;
         }
 
-        /*
         [Command("join")]
         [Summary("Joins the voice channel.")]
         public async Task Join()
@@ -42,7 +42,7 @@ namespace TidesBotDotNet.Modules
             await Context.Message.Channel.SendMessageAsync(result);
         }
 
-        [Command("play")]
+        [Command("play", RunMode = RunMode.Async)]
         [Summary("Plays the link given.")]
         [Alias("p")]
         public async Task PlayMusic([Remainder]string link)
@@ -172,7 +172,7 @@ namespace TidesBotDotNet.Modules
                 Console.WriteLine(e.ToString());
             }
             await Context.Channel.SendMessageAsync(result);
-        }*/
+        }
 
     }
 }

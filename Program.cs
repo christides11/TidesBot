@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
 using TidesBotDotNet.Services;
 using Victoria.Node;
+using Victoria.Node.EventArgs;
+using Victoria.Player;
 
 namespace TidesBotDotNet
 {
@@ -85,6 +87,11 @@ namespace TidesBotDotNet
             await Task.Delay(-1);
         }
 
+        private async Task OnTrackEnded(TrackEndEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
+        {
+            Console.WriteLine("???");
+        }
+
         private bool LoadBotDefinition()
         {
             string bd = SaveLoadService.Load("botdefinition.json");
@@ -112,9 +119,9 @@ namespace TidesBotDotNet
 
         private async Task OnReadyAsync()
         {
-            /*
             await lavaNode.ConnectAsync();
-
+            lavaNode.OnTrackEnd += OnTrackEnded;
+            /*
             ulong guildId = 283863914591027200;
             // Let's build a guild command! We're going to need a guild so lets just put that in a variable.
             var guild = client.GetGuild(guildId);
