@@ -20,6 +20,7 @@ namespace TidesBotDotNet.Services
             public int previewMode = 1;
             public bool adminOnly = true;
             public List<string> users = new List<string>();
+            public Dictionary<string, int> previewModeOverrides = new Dictionary<string, int>();
 
             public TwitchGuildDefinition(ulong guildID, ulong textChannelID)
             {
@@ -180,6 +181,29 @@ namespace TidesBotDotNet.Services
             }
 
             guildDefinition.previewMode = previewMode;
+            UpdateMonitoredChannels();
+            return true;
+        }
+
+        public bool SetUserPreviewMode(ulong guildID, string username, int previewMode)
+        {
+            TwitchGuildDefinition guildDefinition = guilds.Find(x => x.guildID == guildID);
+
+            if (guildDefinition == null)
+            {
+                return false;
+            }
+
+            if (guildDefinition.previewModeOverrides.ContainsKey(username.ToLower()))
+            {
+                guildDefinition.previewModeOverrides[username.ToLower()] = previewMode;
+            }
+            else
+            {
+                guildDefinition.previewModeOverrides.Add(username.ToLower(), previewMode);
+            }
+
+            UpdateMonitoredChannels();
             return true;
         }
 
@@ -252,7 +276,14 @@ namespace TidesBotDotNet.Services
                             Text = $"{uc.TotalFollows} followers."
                         };
 
-                        switch (guild.previewMode)
+                        int userPreviewMode = guild.previewMode;
+
+                        if (guild.previewModeOverrides.ContainsKey(e.Stream.UserName.ToLower()))
+                        {
+                            userPreviewMode = guild.previewModeOverrides[e.Stream.UserName.ToLower()];
+                        }
+
+                        switch (userPreviewMode)
                         {
                             case 1:
                                 output.WithImageUrl($"{e.Stream.ThumbnailUrl.Replace("{width}", "1280").Replace("{height}", "720")}?{e.Stream.UserName}.{e.Stream.ViewerCount}.{timeLive.TotalMinutes}.{getrandom.Next(0, int.MaxValue)}");
@@ -265,14 +296,22 @@ namespace TidesBotDotNet.Services
                                     }
                                     catch (Exception exception)
                                     {
-                                        Console.WriteLine($"Twitch error with url: {boxArtURL}");
+                                        Console.WriteLine($"Twitch error with url: {boxArtURL}. {exception}");
                                     }
                                 }
                                 break;
                             case 2:
                                 if (streamGame != null)
                                 {
-                                    output.WithThumbnailUrl(streamGame.BoxArtUrl.Replace("{width}", "425").Replace("{height}", "550"));
+                                    string boxArtURL = streamGame.BoxArtUrl.Replace("{width}", "425").Replace("{height}", "550");
+                                    try
+                                    {
+                                        output.WithThumbnailUrl(boxArtURL);
+                                    }
+                                    catch (Exception exception)
+                                    {
+                                        Console.WriteLine($"Twitch error with url: {boxArtURL}. {exception}");
+                                    }
                                 }
                                 break;
                         }

@@ -131,5 +131,23 @@ namespace TidesBotDotNet.Modules
 
             await Context.Channel.SendMessageAsync("Changed display mode.");
         }
+
+        [Command("userdisplay")]
+        [Alias("ud")]
+        [Summary("0 = no image, 1 = stream image, 2 = boxart")]
+        [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
+        public async Task DisplayMode(string username, int mode)
+        {
+            bool result = twitchService.SetUserPreviewMode(Context.Guild.Id, username, mode);
+
+            if (!result)
+            {
+                await Context.Channel.SendMessageAsync($"Please add a channel to the report list first.");
+                return;
+            }
+
+            await Context.Channel.SendMessageAsync("Changed user's display mode.");
+        }
     }
 }
