@@ -1,21 +1,24 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
+using Discord.Interactions;
+using System.Reflection;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
 using TidesBotDotNet.Modules;
+using Discord;
 
 namespace TidesBotDotNet.Services
 {
     public class CommandHandler
     {
         private readonly DiscordSocketClient _client;
-        private readonly CommandService _commands;
+        private readonly InteractionService _commands;
         private readonly IServiceProvider services;
         private readonly BotDefinition botDefinition;
 
-        public CommandHandler(IServiceProvider services, DiscordSocketClient client, CommandService commands, BotDefinition botDefinition)
+        public CommandHandler(IServiceProvider services, DiscordSocketClient client, InteractionService commands, BotDefinition botDefinition)
         {
             _commands = commands;
             _client = client;
@@ -25,9 +28,6 @@ namespace TidesBotDotNet.Services
 
         public async Task InstallCommandsAsync()
         {
-            // Hook the MessageReceived event into our command handler
-            _client.MessageReceived += HandleCommandAsync;
-
             // Here we discover all of the command modules in the entry 
             // assembly and load them. Starting from Discord.NET 2.0, a
             // service provider is required to be passed into the
@@ -36,10 +36,40 @@ namespace TidesBotDotNet.Services
             //
             // If you do not use Dependency Injection, pass null.
             // See Dependency Injection guide for more information.
-            await _commands.AddModulesAsync(assembly: Assembly.GetEntryAssembly(),
-                                            services: services);
+            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), services);
+
+            // Hook the MessageReceived event into our command handler
+            //_client.MessageReceived += HandleCommandAsync;
+            _client.InteractionCreated += HandleInteraction;
+
+            _commands.SlashCommandExecuted += SlashCommandExecuted;
         }
 
+        private async Task HandleInteraction(SocketInteraction arg)
+        {
+            try
+            {
+                // Create an execution context that matches the generic type parameter of your InteractionModuleBase<T> modules
+                var ctx = new SocketInteractionContext(_client, arg);
+                await _commands.ExecuteCommandAsync(ctx, services);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+
+                // If a Slash Command execution fails it is most likely that the original interaction acknowledgement will persist. It is a good idea to delete the original
+                // response, or at least let the user know that something went wrong during the command execution.
+                if (arg.Type == InteractionType.ApplicationCommand)
+                    await arg.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
+            }
+        }
+
+        private Task SlashCommandExecuted(SlashCommandInfo arg1, IInteractionContext arg2, Discord.Interactions.IResult arg3)
+        {
+            return Task.CompletedTask;
+        }
+
+        /*
         private async Task HandleCommandAsync(SocketMessage messageParam)
         {
             // Don't process the command if it was a system message
@@ -64,10 +94,10 @@ namespace TidesBotDotNet.Services
 
             // Keep in mind that result does not indicate a return value
             // rather an object stating if the command executed successfully.
-            var result = await _commands.ExecuteAsync(
-                context: context,
-                argPos: argPos,
-                services: services);
+            //var result = await _commands.ExecuteAsync(
+            //    context: context,
+            //    argPos: argPos,
+            //    services: services);
 
             // Optionally, we may inform the user if the command fails
             // to be executed; however, this may not always be desired,
@@ -75,6 +105,6 @@ namespace TidesBotDotNet.Services
             // command.
             // if (!result.IsSuccess)
             // await context.Channel.SendMessageAsync(result.ErrorReason);
-        }
+        }*/
     }
 }

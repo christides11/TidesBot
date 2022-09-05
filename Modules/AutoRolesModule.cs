@@ -1,42 +1,34 @@
 ﻿using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TidesBotDotNet.Services;
 using static TidesBotDotNet.Services.AutoRolesService;
 
 namespace TidesBotDotNet.Modules
 {
-    [Group("autoroles")]
-    public class AutoRolesModule : ModuleBase<SocketCommandContext>
+    [Group("autoroles", "Module for assigning roles when joining guild.")]
+    public class AutoRolesModule : InteractionModuleBase<SocketInteractionContext>
     {
         public AutoRolesService autoRolesService;
-        private DiscordSocketClient client;
 
-        public AutoRolesModule(AutoRolesService autoRoleService, DiscordSocketClient client)
+        public AutoRolesModule(AutoRolesService autoRoleService)
         {
             this.autoRolesService = autoRoleService;
-            this.client = client;
         }
 
-        [Command("roles")]
-        [Summary("List the roles that are assigned when a user joins.")]
+        [SlashCommand("roles", "List the roles that are assigned when a user joins.")]
         public async Task Roles () {
             AutoRolesGuildDefinition arg = autoRolesService.autoRoles.FirstOrDefault(x => x.guildID == Context.Guild.Id);
             if(arg == null) {
-                await Context.Channel.SendMessageAsync("No roles are currently being handled.");
+                await RespondAsync("No roles are currently being handled.", ephemeral: true);
                 return;
             }
-            await Context.Channel.SendMessageAsync(string.Join(',', arg.roles));
+            await RespondAsync(string.Join(',', arg.roles), ephemeral: true);
         }
 
-        [Command("addrole")]
-        [Alias("ar")]
-        [Summary("Adds a role to be auto assigned to users.")]
+        [SlashCommand("add-role", "Adds a role to be auto assigned to users.")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
         public async Task AddRole(string role)
@@ -44,16 +36,14 @@ namespace TidesBotDotNet.Modules
             SocketRole wantedRole = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
             if(wantedRole == null)
             {
-                await Context.Channel.SendMessageAsync($"Role {role} not found.");
+                await RespondAsync($"Role {role} not found.", ephemeral: true);
                 return;
             }
-            await Context.Channel.SendMessageAsync(autoRolesService.AddRole(Context.Guild, wantedRole));
+            await RespondAsync(autoRolesService.AddRole(Context.Guild, wantedRole), ephemeral: true);
             autoRolesService.Save();
         }
 
-        [Command("removerole")]
-        [Alias("rr")]
-        [Summary("Removes a role to be auto assigned to users.")]
+        [SlashCommand("remove-role", "Removes a role to be auto assigned to users.")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
         public async Task RemoveRole(string role)
@@ -61,10 +51,10 @@ namespace TidesBotDotNet.Modules
             SocketRole wantedRole = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
             if (wantedRole == null)
             {
-                await Context.Channel.SendMessageAsync($"Role {role} not found.");
+                await RespondAsync($"Role {role} not found.", ephemeral: true);
                 return;
             }
-            await Context.Channel.SendMessageAsync(autoRolesService.RemoveRole(Context.Guild, wantedRole));
+            await RespondAsync(autoRolesService.RemoveRole(Context.Guild, wantedRole), ephemeral: true);
             autoRolesService.Save();
         }
     }

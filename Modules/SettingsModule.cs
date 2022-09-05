@@ -1,23 +1,16 @@
-﻿using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Discord.Interactions;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
-using TidesBotDotNet.Services;
 
 namespace TidesBotDotNet.Modules
 {
-    [Group("settings")]
-    public class SettingsModule : ModuleBase<SocketCommandContext>
+    [Group("settings", "General guild settings.")]
+    public class SettingsModule : InteractionModuleBase<SocketInteractionContext>
     {
         public GuildsDefinition gd;
 
-        [Group("user")]
-        public class SettingsUserModule : ModuleBase<SocketCommandContext>
+        [Group("user", "Settings related to users.")]
+        public class SettingsUserModule : InteractionModuleBase<SocketInteractionContext>
         {
             public GuildsDefinition gd;
 
@@ -26,19 +19,18 @@ namespace TidesBotDotNet.Modules
                 gd = guildsDefinition;
             }
 
-            [Command("colorme")]
+            [SlashCommand("colorme-status", "Check colorme permission.")]
             public async Task ColorMe()
             {
-                await Context.Channel
-                    .SendMessageAsync($"Colorme permission is set to {gd.GetSettings(Context.Guild.Id).colorMe.ToString()}.");
+                await RespondAsync($"Colorme is currently {(gd.GetSettings(Context.Guild.Id).colorMe ? "enabled" : "disabled")}.", ephemeral: true);
             }
 
-            [Command("colorme")]
+            [SlashCommand("colorme", "Set colorme enabled state.")]
             public async Task ColorMe(bool enabled)
             {
                 gd.GetSettings(Context.Guild.Id).colorMe = enabled;
-                await Context.Channel.SendMessageAsync($"ColorMe set to " + ( enabled ? "enabled" : "disabled" ) + ".");
                 gd.SaveSettings();
+                await RespondAsync($"ColorMe is now " + ( enabled ? "enabled" : "disabled" ) + " in this guild.", ephemeral: true);
             }
         }
     }

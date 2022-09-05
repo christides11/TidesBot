@@ -1,6 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
+using Discord.Interactions;
 using System;
 using System.Linq;
 using System.Text;
@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace TidesBotDotNet.Modules
 {
-    public class HelpModule : ModuleBase<SocketCommandContext>
+    /*
+    public class HelpModule : InteractionModuleBase<SocketInteractionContext>
     {
 
         private readonly CommandService commands;
@@ -123,5 +124,5 @@ namespace TidesBotDotNet.Modules
                 output += string.Concat(module.Aliases.FirstOrDefault(), " ");
             return output;
         }
-    }
+    }*/
 }

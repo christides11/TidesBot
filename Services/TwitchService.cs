@@ -243,6 +243,7 @@ namespace TidesBotDotNet.Services
             {
                 foreach (TwitchGuildDefinition guild in guilds)
                 {
+                    if (client.GetGuild(guild.guildID) == null) continue; 
                     //If the user should be reported on in this guild.
                     if (!String.IsNullOrEmpty(guild.users.Find(x => x.ToLower() == e.Stream.UserName.ToLower())))
                     {

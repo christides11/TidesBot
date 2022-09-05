@@ -1,21 +1,16 @@
 ﻿using Discord;
-using Discord.Commands;
-using Discord.Rest;
+using Discord.Interactions;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
-using TidesBotDotNet.Services;
-using TwitchLib.Api;
 
 namespace TidesBotDotNet.Modules
 {
-    public class UserModule : ModuleBase<SocketCommandContext>
+    public class UserModule : InteractionModuleBase<SocketInteractionContext>
     {
         public GuildsDefinition guildsDefinition;
 
@@ -24,15 +19,14 @@ namespace TidesBotDotNet.Modules
             guildsDefinition = gd;
         }
 
-        [Command("colorme")]
-        [Alias("cm")]
-        [Summary("Gives the user a color based on the hexcode given.")]
+        [SlashCommand("colorme", "Gives the user a color based on the hexcode given.")]
         public async Task ColorMe(string color)
         {
             // Check if this guild supports ColorMe.
             if (!guildsDefinition.GetSettings(Context.Guild.Id).colorMe)
             {
-                await Context.Channel.SendMessageAsync("ColorMe is not enabled for this server.");
+                await RespondAsync("Sorry, ColorMe is not enabled on this server.", ephemeral: true);
+                //await Context.Channel.SendMessageAsync("ColorMe is not enabled for this server.");
                 return;
             }
 
@@ -45,7 +39,8 @@ namespace TidesBotDotNet.Modules
             }
             catch
             {
-                await Context.Channel.SendMessageAsync("Invalid hex code.");
+                await RespondAsync("Invalid hex code.", ephemeral: true);
+                //await Context.Channel.SendMessageAsync("Invalid hex code.");
                 return;
             }
             // Check if the user already has a color role.
@@ -78,9 +73,7 @@ namespace TidesBotDotNet.Modules
             await Context.Channel.SendMessageAsync($"Assigned color {roleColor.ToString()} to {Context.User.Username}.");
         }
 
-        [Command("colormer")]
-        [Alias("cmr")]
-        [Summary("Removes the color role from the user.")]
+        [SlashCommand("colorme-remove", "Removes the color role from the user.")]
         public async Task ColorMeRemove()
         {
             var role = Context.Guild.Roles.FirstOrDefault(x => x.Name == "colorme" + Context.User.Id);
@@ -91,41 +84,21 @@ namespace TidesBotDotNet.Modules
             await Context.Channel.SendMessageAsync("Removed color role.");
         }
 
-        [Command("avatar")]
-        public async Task Avatar(params string[] users)
-        {
-            await Avatar(1024, users);
-        }
-
-        [Command("avatar")]
-        [Summary("Gets the avatar of the user(s). Size must be a power of 2 between 16 and 2048." +
-            "You do not have to @ the user(s), just type their username(s).")]
-        public async Task Avatar(ushort size, params string[] users)
+        [SlashCommand("avatar", "Gets the avatar of the user.")]
+        public async Task Avatar([Choice("32x32", 32), Choice("64x64", 64), Choice("128x128", 128), Choice("256x256", 256), Choice("512x512", 512), Choice("1024x1024", 1024), Choice("2048x2048", 2048)]ushort size, SocketUser users)
         {
             ImageFormat format = ImageFormat.Auto;
-            foreach (SocketUser su in Context.Message.MentionedUsers)
-            {
-                await AvatarTask(su, format, size);
-            }
-            foreach(string user in users)
-            {
-                SocketGuildUser u = Context.Guild.Users.FirstOrDefault(x => x.Username.ToLower() == user.ToLower());
-                if(u != null)
-                {
-                    await AvatarTask(u, format, size);
-                }
-            }
+            await AvatarTask(users, format, size);
         }
 
         public async Task AvatarTask(SocketUser user, ImageFormat format, ushort size)
         {
             EmbedBuilder output = new EmbedBuilder();
             output.WithImageUrl(user.GetAvatarUrl(format, size));
-            await ReplyAsync("", embed: output.Build());
+            await RespondAsync("", embed: output.Build());
         }
 
-        [Command("purge")]
-        [Summary("Purges an amount of messages in the current channel.")]
+        [SlashCommand("purge", "Purges an amount of messages in the current channel.")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
         public async Task Purge(int amount)
@@ -134,61 +107,33 @@ namespace TidesBotDotNet.Modules
             {
                 IEnumerable<IMessage> messages = await Context.Channel.GetMessagesAsync(amount + 1).FlattenAsync();
                 await ((ITextChannel)Context.Channel).DeleteMessagesAsync(messages);
-                await ReplyAsync($"Deleted {amount} messages.");
+                await RespondAsync($"Deleted {amount} messages.");
             }
             catch
             {
-                await ReplyAsync($"Error deleting {amount} messages.");
+                await RespondAsync($"Error deleting {amount} messages.", ephemeral: true);
             }
         }
 
-        [Command("userinfo")]
-        [Summary("Get info on the user(s) you list. If no users are provided, get info on yourself.")]
-        public async Task UserInfo(params String[] users)
+        [SlashCommand("user-info", "Get info on a given user.")]
+        public async Task UserInfo(SocketUser users)
         {
-            if (Context.Message.MentionedUsers.Count > 0)
-            {
-                foreach (SocketUser user in Context.Message.MentionedUsers)
-                {
-                    SocketGuildUser mentionedUser = Context.Guild.Users.FirstOrDefault(x => x.Username.ToLower() == user.Username.ToLower());
-                    if (mentionedUser != null)
-                    {
-                        await UserInfo(mentionedUser);
-                    }
-                }
-                return;
-            }
-
-            if (users.Count() > 1)
-            {
-                foreach (string user in users)
-                {
-                    await UserInfo(new String[] { user });
-                }
-                return;
-            }
-
-            // If they don't specify a user, print the info for themselves.
-            if(users.Count() == 0)
-            {
-                users = new string[] { Context.User.Username };
-            }
-
+            SocketGuildUser wantedUser = Context.Guild.Users.FirstOrDefault(x => x.Id == users.Id);
             // Print the info for the wanted user.
-            SocketGuildUser wantedUser = Context.Guild.Users.FirstOrDefault(x => x.Username.ToLower() == users[0].ToLower());
-            if(wantedUser != null)
+            if (wantedUser != default(SocketGuildUser))
             {
-                await UserInfo(wantedUser);
+                await PrintUserInfo(wantedUser);
             }
         }
 
-        [Command("Say")]
-        public async Task Say(params string[] message)
+        [SlashCommand("say", "Give the bot a sentence to say.")]
+        public async Task Say(string message)
         {
-            await Context.Channel.SendMessageAsync(String.Join(' ', message));
+            
+            await RespondAsync(String.Join(' ', message));
         }
 
-        private async Task UserInfo(SocketGuildUser user)
+        private async Task PrintUserInfo(SocketGuildUser user)
         {
             EmbedBuilder output = new EmbedBuilder();
 
@@ -202,7 +147,7 @@ namespace TidesBotDotNet.Modules
                 .AddField("Joined Server On:", $"{joinedAt} ({(DateTime.UtcNow - joinedAt).Days} days ago).")
                 .AddField("Roles:", $"{string.Join(", ", user.Roles.ToList())}");
 
-            await ReplyAsync("", embed: output.Build());
+            await RespondAsync(embed: output.Build());
         }
 
         private uint GetRawColor(string color)

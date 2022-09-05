@@ -1,74 +1,58 @@
 ﻿using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
+using Discord.Interactions;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TidesBotDotNet.Services;
-using TwitchLib.Api;
-using Victoria;
 using Victoria.Player;
 
 namespace TidesBotDotNet.Modules
 {
-    [Group("dj")]
-    public class DJModule : ModuleBase<SocketCommandContext>
+    [Group("dj", "Music-related commands.")]
+    public class DJModule : InteractionModuleBase<SocketInteractionContext>
     {
         private DJService djService;
-        private DiscordSocketClient client;
 
-        public DJModule(DJService djService, DiscordSocketClient client)
+        public DJModule(DJService djService)
         {
             this.djService = djService;
-            this.client = client;
         }
 
-        [Command("join")]
-        [Summary("Joins the voice channel.")]
+        [SlashCommand("join", "Joins the voice channel.")]
         public async Task Join()
         {
             string result = await djService.JoinChannel(Context.Guild, (Context.User as IVoiceState).VoiceChannel, Context.Channel as ITextChannel);
-            await Context.Message.Channel.SendMessageAsync(result);
+            await RespondAsync(result, ephemeral: true);
         }
 
-        [Command("leave")]
-        [Summary("Leave the voice channel.")]
-        [Alias("stop")]
+        [SlashCommand("stop", "Stops playback and leaves the voice channel.")]
         public async Task Disconnect()
         {
             string result = await djService.LeaveChannel(Context.Guild, (Context.User as IVoiceState).VoiceChannel);
-            await Context.Message.Channel.SendMessageAsync(result);
+            await RespondAsync(result, ephemeral: true);
         }
 
-        [Command("play", RunMode = RunMode.Async)]
-        [Summary("Plays the link given.")]
-        [Alias("p")]
-        public async Task PlayMusic([Remainder]string link)
+        [SlashCommand("play", "Plays the link given.", runMode: RunMode.Async)]
+        public async Task PlayMusic(string link)
         {
             string result = await djService.PlayQuery(Context.User, Context.Guild, 
                 (Context.User as IVoiceState).VoiceChannel, Context.Channel as ITextChannel, link.Trim());
-            await Context.Message.Channel.SendMessageAsync(result);
+            await RespondAsync(result);
         }
 
-        [Command("search")]
-        [Summary("Searches youtube using the given query")]
-        [Alias("s")]
-        public async Task Search([Remainder] string query)
+        //TODO
+        public async Task Search(string query)
         {
-            await Context.Message.Channel.SendMessageAsync("To be implemented.");
+            await RespondAsync("To be implemented.", ephemeral: true);
         }
 
-        [Command("queue")]
-        [Summary("Show the songs that are coming up next.")]
+        [SlashCommand("queue", "Shows current and upcoming songs.")]
         public async Task Queue()
         {
             var queue = djService.GetQueue(Context.Guild);
 
             if(queue.Count == 0)
             {
-                await Context.Message.Channel.SendMessageAsync("The queue is empty.");
+                await RespondAsync("The queue is empty.", ephemeral: true);
                 return;
             }
 
@@ -90,43 +74,39 @@ namespace TidesBotDotNet.Modules
                 trackPosition++;
             }
 
-            await ReplyAsync("", embed: output.Build());
+            await RespondAsync("", embed: output.Build());
         }
 
-        [Command("current")]
-        [Summary("Shows the song that is currently playing.")]
-        [Alias("now")]
+        [SlashCommand("now", "Shows the current playing song.")]
         public async Task CurrentSong()
         {
             var currentTrack = djService.GetCurrentlyPlaying(Context.Guild);
 
             if(currentTrack == null)
             {
-                await Context.Channel.SendMessageAsync("No track is currently playing.");
+                await RespondAsync("No track is currently playing.", ephemeral: true);
                 return;
             }
 
-            await Context.Channel.SendMessageAsync(
+            await RespondAsync(
                 $"**Currently Playing** 🎶 `{currentTrack.track.Title}` ({currentTrack.track.Position.ToString(@"hh\:mm\:ss")}" +
                 $"/{currentTrack.track.Duration}) [{currentTrack.user.Mention}]");
         }
 
-        [Command("remove")]
-        [Summary("Removes a entry from the queue.")]
+        [SlashCommand("remove", "Removes an entry from the queue.")]
         public async Task Remove(int position)
         {
             var result = djService.RemoveFromQueue(Context.Guild, position-1);
 
             if (!result)
             {
-                await Context.Channel.SendMessageAsync("Could not remove entry from that position.");
+                await RespondAsync("Could not remove entry from that position.", ephemeral: true);
                 return;
             }
-            await Context.Channel.SendMessageAsync($"Removed entry at {position}.");
+            await RespondAsync($"Removed entry at {position}.");
         }
 
-        [Command("seek")]
-        [Summary("Skips to the time given.")]
+        [SlashCommand("seek", "Skips to the time given.")]
         public async Task SeekTime(string time)
         {
             TimeSpan convertedTime;
@@ -141,8 +121,7 @@ namespace TidesBotDotNet.Modules
             }
         }
 
-        [Command("shuffle")]
-        [Summary("Shuffles the queue.")]
+        [SlashCommand("shuffle", "Shuffles the queue.")]
         public async Task ShuffleQueue()
         {
             string s = djService.ShuffleQueue(Context.Guild);
@@ -150,8 +129,7 @@ namespace TidesBotDotNet.Modules
             await Context.Channel.SendMessageAsync(s);
         }
 
-        [Command("loop")]
-        [Summary("Toggles if the current song should loop.")]
+        [SlashCommand("loop", "Toggles if the current song should loop.")]
         public async Task ToggleLoop()
         {
             string s = djService.ToggleLoop(Context.Guild);
@@ -159,19 +137,19 @@ namespace TidesBotDotNet.Modules
             await Context.Channel.SendMessageAsync(s);
         }
 
-        [Command("skip")]
-        [Summary("Vote to skip the current song.")]
+        [SlashCommand("skip", "Vote to skip the current song.")]
         public async Task SkipSong()
         {
-            string result = "Sorry, ane error has occured.";
+            string result = "Sorry, an error has occured.";
             try
             {
                 result = await djService.VoteToSkip(Context.Guild, Context.User.Username);
             }catch(Exception e)
             {
                 Console.WriteLine(e.ToString());
+                await RespondAsync($"Encountered an error skipping. : {e.ToString}", ephemeral: true);
             }
-            await Context.Channel.SendMessageAsync(result);
+            await RespondAsync(result);
         }
 
     }

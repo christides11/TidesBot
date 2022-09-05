@@ -1,24 +1,18 @@
 ﻿using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TidesBotDotNet.Services;
-using TwitchLib.Api;
-
 
 namespace TidesBotDotNet.Modules
 {
-    [Group("twitch")]
-    public class TwitchModule : ModuleBase<SocketCommandContext>
+    [Group("twitch", "Twitch-related commands.")]
+    public class TwitchModule : InteractionModuleBase<SocketInteractionContext>
     {
 
         public static TwitchService twitchService;
-
-        private DiscordSocketClient client;
 
         public TwitchModule(DiscordSocketClient client)
         {
@@ -26,10 +20,9 @@ namespace TidesBotDotNet.Modules
             {
                 twitchService = new TwitchService(client);
             }
-            this.client = client;
         }
 
-        [Command]
+        [SlashCommand("info", "Print information on twitch info for this server.")]
         public async Task Twitch()
         {
             var guild = twitchService.GetGuild(Context.Guild.Id);
@@ -38,116 +31,84 @@ namespace TidesBotDotNet.Modules
                 var channel = Context.Guild.Channels.FirstOrDefault(x => x.Id == guild.textChannelID);
                 if (channel != null)
                 {
-                    await Context.Channel.SendMessageAsync($"Alerting for {guild.users.Count} users in "
+                    await RespondAsync($"Alerting for {guild.users.Count} users in "
                         + $"{channel.Name}.");
                     return;
                 }
             }
-            await Context.Channel.SendMessageAsync("Module for sending alerts when channels go live.");
+            await RespondAsync("Module for sending alerts when channels go live.");
         }
 
-        [Command("adduser")]
-        [Alias("add", "a")]
-        [Summary("Adds a user to send a message when they go live.")]
+        [SlashCommand("add-user", "Adds a user to send a message when they go live.")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
-        public async Task AddUser(params String[] usernames)
+        public async Task AddUser(string username)
         {
-            if(usernames.Count() > 1)
-            {
-                foreach(string username in usernames)
-                {
-                    await AddUser(username);
-                }
-                return;
-            }
-
-            var m = await Context.Channel.SendMessageAsync(await twitchService.AddUser(Context.Guild.Id, Context.Channel.Id, usernames[0]));
+            await RespondAsync(await twitchService.AddUser(Context.Guild.Id, Context.Channel.Id, username));
         }
 
-        [Command("removeuser")]
-        [Alias("remove", "r")]
-        [Summary("Remove the user from live reporting.")]
+        [SlashCommand("remove-user", "Remove the user from live reporting.")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
-        public async Task RemoveUser(params String[] usernames)
+        public async Task RemoveUser(string username)
         {
-            if (usernames.Count() > 1)
-            {
-                foreach (string username in usernames)
-                {
-                    await RemoveUser();
-                }
-                return;
-            }
-
-            var m = await Context.Channel.SendMessageAsync(twitchService.RemoveUser(Context.Guild.Id, usernames[0]));
+            await RespondAsync(twitchService.RemoveUser(Context.Guild.Id, username));
         }
 
-        [Command("users")]
-        [Alias("u")]
-        [Summary("Prints the usernames of all users we report on.")]
+        [SlashCommand("users", "Prints the usernames of all users we report on.")]
         public async Task PrintUsers()
         {
             string[] users = twitchService.GetUsersInGuild(Context.Guild.Id);
 
-            await Context.Channel.SendMessageAsync($"Current Users: {String.Join(", ", users)}");
+            await RespondAsync($"Current Users: {String.Join(", ", users).Replace("_", "\\_")}");
         }
 
-        [Command("setchannel")]
-        [Alias("channel", "c")]
-        [Summary("Set the channel that the alert happens in.")]
+        [SlashCommand("set-text-channel", "Set the text channel that the alerts happen in.")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
-        public async Task SetChannel(string param)
+        public async Task SetChannel(ISocketMessageChannel channel)
         {
-            var channel = Context.Message.MentionedChannels.FirstOrDefault();
-
             if (channel == null)
             {
-                await Context.Channel.SendMessageAsync("No channel mentioned.");
+                await RespondAsync("Channel is invalid.", ephemeral: true);
                 return;
             }
 
             twitchService.SetAlertChannel(Context.Guild.Id, channel.Id);
 
-            await Context.Channel.SendMessageAsync($"Alerts are set to happen in {channel.Name}.");
+            await RespondAsync($"Alerts are set to happen in {channel.Name}.");
         }
 
-        [Command("display")]
-        [Alias("d")]
-        [Summary("0 = no image, 1 = stream image, 2 = boxart")]
+        [SlashCommand("display", "Change display mode.")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
-        public async Task DisplayMode(int mode)
+        public async Task DisplayMode([Choice("No Image", 0), Choice("Stream Image", 1), Choice("Box Art", 2)]int mode)
         {
             bool result = twitchService.SetPreviewMode(Context.Guild.Id, mode);
 
             if (!result)
             {
-                await Context.Channel.SendMessageAsync($"Please add a channel to the report list first.");
+                await RespondAsync($"Please add a channel to the report list first.");
                 return;
             }
 
-            await Context.Channel.SendMessageAsync("Changed display mode.");
+            await RespondAsync("Changed display mode.");
         }
 
-        [Command("userdisplay")]
-        [Alias("ud")]
-        [Summary("0 = no image, 1 = stream image, 2 = boxart")]
+        [SlashCommand("user-display", "Change display mode for a specific user.")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
-        public async Task DisplayMode(string username, int mode)
+        public async Task DisplayMode(string username, [Choice("No Image", 0), Choice("Stream Image", 1), Choice("Box Art", 2)] int mode)
         {
             bool result = twitchService.SetUserPreviewMode(Context.Guild.Id, username, mode);
 
             if (!result)
             {
-                await Context.Channel.SendMessageAsync($"Please add a channel to the report list first.");
+                await RespondAsync($"Please add a channel to the report list first.");
                 return;
             }
 
-            await Context.Channel.SendMessageAsync("Changed user's display mode.");
+            await RespondAsync("Changed user's display mode.");
         }
     }
 }

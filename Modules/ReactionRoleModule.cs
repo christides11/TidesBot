@@ -1,22 +1,15 @@
 ﻿using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
 using TidesBotDotNet.Services;
-using TwitchLib.Api;
 
-/// <summary>
-/// 
-/// </summary>
 namespace TidesBotDotNet.Modules
 {
-    [Group("react")]
-    public class ReactionRoleModule : ModuleBase<SocketCommandContext>
+    [Group("react", "Commands related to reaction roles.")]
+    public class ReactionRoleModule : InteractionModuleBase<SocketInteractionContext>
     {
         private DiscordSocketClient client;
         private ReactionRoleService roleService;
@@ -29,21 +22,17 @@ namespace TidesBotDotNet.Modules
             this.roleService = roleService;
         }
 
+        [SlashCommand("refresh", "Refreshes the role service for this guild.")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
-        [Command("remove")]
-        [Alias("r")]
         public async Task RefreshReactions()
         {
             await roleService.RefreshRoles(Context.Guild);
         }
 
+        [SlashCommand("add", "Makes reacting to the given emote on the given message assign the user a role.")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
-        [Command("add")]
-        [Alias("a")]
-        [Summary("Makes reacting to the given emote on the given message assign the user a role. Roles within the same group " +
-            "mean that the user can't have those roles at the same time.")]
         public async Task OnAddReaction(string messageID, string emote, string role, string group = "")
         {
             Emoji emoji = null;
@@ -57,7 +46,7 @@ namespace TidesBotDotNet.Modules
             // Convert the string to a message ID.
             if (!ulong.TryParse(messageID, out realMessageID))
             {
-                await ReplyAsync($"Invalid message ID.");
+                await RespondAsync($"Invalid message ID.", ephemeral: true);
                 return;
             }
 
@@ -74,7 +63,7 @@ namespace TidesBotDotNet.Modules
 
             if (tt == null)
             {
-                await ReplyAsync($"Could not find message with ID {tt.Content}.");
+                await RespondAsync($"Could not find message with ID {tt.Content}.", ephemeral: true);
                 return;
             }
 
@@ -83,21 +72,20 @@ namespace TidesBotDotNet.Modules
 
             if(realRole == null)
             {
-                await ReplyAsync($"Could not find role {role}.");
+                await RespondAsync($"Could not find role {role}.", ephemeral: true);
                 return;
             }
 
             // Check result.
             string result = await roleService.AddReactRole(Context.Guild, tt, emoteResult, emoji, realRole, group);
-            await ReplyAsync(result);
+            await RespondAsync(result, ephemeral: true);
 
             guildsDefinition.SaveReactRoles();
         }
 
+        [SlashCommand("remove", "Removes a given reaction role.")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
-        [Command("remove")]
-        [Alias("r")]
         public async Task OnRemoveReaction(string messageID, string emote, string role)
         {
             Emoji emoji = null;
