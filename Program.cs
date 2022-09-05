@@ -2,15 +2,15 @@
 using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Lavalink4NET.DiscordNet;
+using Lavalink4NET;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
 using TidesBotDotNet.Services;
-using Victoria.Node;
-using Victoria.Node.EventArgs;
-using Victoria.Player;
+using Lavalink4NET.Tracking;
 
 namespace TidesBotDotNet
 {
@@ -33,10 +33,21 @@ namespace TidesBotDotNet
                 LogLevel = LogSeverity.Debug,
                 MessageCacheSize = 100
             }))
-            .AddSingleton<NodeConfiguration>()
-            .AddSingleton(x => new LavaNode<LavaPlayer, LavaTrack>(x.GetRequiredService<DiscordSocketClient>(), x.GetRequiredService<NodeConfiguration>(), null))
             .AddSingleton(botDefinition)
             .AddSingleton(guildsDefinition)
+            .AddSingleton<IAudioService, LavalinkNode>()
+            .AddSingleton<IDiscordClientWrapper, DiscordClientWrapper>()
+            .AddSingleton(new LavalinkNodeOptions {
+                RestUri = "http://localhost:2333/",
+                WebSocketUri = "ws://localhost:2333/",
+                Password = "youshallnotpass"
+            })
+            .AddSingleton(new InactivityTrackingOptions{
+                DisconnectDelay = TimeSpan.FromSeconds(10),
+                PollInterval = TimeSpan.FromSeconds(4),
+                TrackInactivity = true
+             })
+            .AddSingleton<InactivityTrackingService>()
             .AddSingleton<InteractionService>()
             .AddSingleton<CommandHandler>()
             .AddSingleton<ReactionRoleService>()
@@ -103,15 +114,9 @@ namespace TidesBotDotNet
 
         private async Task OnReadyAsync()
         {
-            //await lavaNode.ConnectAsync();
-            //lavaNode.OnTrackEnd += OnTrackEnded;
-
+            await provider.GetRequiredService<IAudioService>().InitializeAsync();
+            provider.GetRequiredService<InactivityTrackingService>().BeginTracking();
             await provider.GetRequiredService<InteractionService>().RegisterCommandsGloballyAsync(true);
-        }
-
-        private async Task OnTrackEnded(TrackEndEventArg<LavaPlayer, LavaTrack> arg)
-        {
-            Console.WriteLine("???");
         }
     }
 }
