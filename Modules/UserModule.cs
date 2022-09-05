@@ -56,7 +56,7 @@ namespace TidesBotDotNet.Modules
             // Create the role if needed.
             if (colorRole == null)
             {
-                colorRole = await Context.Guild.CreateRoleAsync(roleName, null, roleColor, false, null);
+                colorRole = await Context.Guild.CreateRoleAsync(roleName, null, roleColor, false);
                 await colorRole.ModifyAsync(new Action<RoleProperties>(x => x.Position = highestRole));
             }
             else
