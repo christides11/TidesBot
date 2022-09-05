@@ -26,7 +26,6 @@ namespace TidesBotDotNet.Modules
             if (!guildsDefinition.GetSettings(Context.Guild.Id).colorMe)
             {
                 await RespondAsync("Sorry, ColorMe is not enabled on this server.", ephemeral: true);
-                //await Context.Channel.SendMessageAsync("ColorMe is not enabled for this server.");
                 return;
             }
 
@@ -40,7 +39,6 @@ namespace TidesBotDotNet.Modules
             catch
             {
                 await RespondAsync("Invalid hex code.", ephemeral: true);
-                //await Context.Channel.SendMessageAsync("Invalid hex code.");
                 return;
             }
             // Check if the user already has a color role.
@@ -70,7 +68,7 @@ namespace TidesBotDotNet.Modules
                     Console.WriteLine(e.Message);
                 }
             }
-            await Context.Channel.SendMessageAsync($"Assigned color {roleColor.ToString()} to {Context.User.Username}.");
+            await RespondAsync($"Assigned color {roleColor.ToString()} to {Context.User.Username}.");
         }
 
         [SlashCommand("colorme-remove", "Removes the color role from the user.")]
@@ -81,7 +79,7 @@ namespace TidesBotDotNet.Modules
             {
                 await role.DeleteAsync();
             }
-            await Context.Channel.SendMessageAsync("Removed color role.");
+            await RespondAsync("Removed color role.");
         }
 
         [SlashCommand("avatar", "Gets the avatar of the user.")]

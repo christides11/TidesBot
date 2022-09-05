@@ -49,6 +49,7 @@ namespace TidesBotDotNet
              })
             .AddSingleton<InactivityTrackingService>()
             .AddSingleton<InteractionService>()
+            .AddSingleton<Fergun.Interactive.InteractiveService>()
             .AddSingleton<CommandHandler>()
             .AddSingleton<ReactionRoleService>()
             .AddSingleton<AutoRolesService>()
@@ -114,9 +115,8 @@ namespace TidesBotDotNet
 
         private async Task OnReadyAsync()
         {
-            await provider.GetRequiredService<IAudioService>().InitializeAsync();
-            provider.GetRequiredService<InactivityTrackingService>().BeginTracking();
             await provider.GetRequiredService<InteractionService>().RegisterCommandsGloballyAsync(true);
+            await provider.GetRequiredService<IAudioService>().InitializeAsync();
         }
     }
 }

@@ -18,6 +18,14 @@ namespace TidesBotDotNet.Services
 {
     public class DJService
     {
+        public sealed class TrackContext
+        {
+            public ulong RequesterId { get; set; }
+            public string RequesterName { get; set; }
+            public string OriginalQuery { get; set; }
+        }
+
+
         private IAudioService _audioService;
         
         public DJService(IAudioService audioService)
@@ -72,6 +80,12 @@ namespace TidesBotDotNet.Services
 
                 foreach (var t in response)
                 {
+                    t.Context = new TrackContext
+                    {
+                        OriginalQuery = query,
+                        RequesterId = username.Id,
+                        RequesterName = username.Username
+                    };
                     await player.PlayAsync(t);
                 }
 
@@ -120,11 +134,31 @@ namespace TidesBotDotNet.Services
             {
                 var player = _audioService.GetPlayer<DJPlayer>(guild.Id);
                 if (player == null || player.CurrentTrack == null) throw new Exception("DJ is not currently playing anything.");
-                var r = await player.GetVoteInfoAsync();
-                if (r.Votes.Contains(user.Id)) return ($"{user.Username} has already voted.", null);
-                await player.VoteAsync(user.Id);
-                return ($"{user.Username} voted to skip. {r.Percentage} voted.", null);
+                var context = (TrackContext)player.CurrentTrack.Context;
+                if(context.RequesterId == user.Id)
+                {
+                    await player.SkipAsync();
+                    return ($"Requester voted to skip, skipping.", null);
+                }
+                var skipResult = await player.VoteAsync(user.Id, percentage: 0.5f);
+                if (!skipResult.WasAdded && !skipResult.WasSkipped) return ($"{user.Username} has already voted.", null);
+                return (!skipResult.WasSkipped ? $"{user.Username} voted to skip. {skipResult.Percentage.ToString()}" : $"Song has been skipped.", null);
             }catch(Exception e)
+            {
+                return ("", e);
+            }
+        }
+
+        public async Task<(string, Exception)> Skip(IGuild guild, IUser user)
+        {
+            try
+            {
+                var player = _audioService.GetPlayer<DJPlayer>(guild.Id);
+                if (player == null || player.CurrentTrack == null) throw new Exception("DJ is not currently playing anything.");
+                await player.SkipAsync();
+                return ("Skipping song.", null);
+            }
+            catch(Exception e)
             {
                 return ("", e);
             }

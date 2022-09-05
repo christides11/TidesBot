@@ -1,9 +1,15 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Fergun.Interactive;
+using Fergun.Interactive.Pagination;
+using Lavalink4NET.Player;
 using Lavalink4NET.Rest;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TidesBotDotNet.Services;
+using TwitchLib.Api.Helix.Models.Soundtrack;
+using static TidesBotDotNet.Services.DJService;
 
 namespace TidesBotDotNet.Modules
 {
@@ -11,10 +17,12 @@ namespace TidesBotDotNet.Modules
     public class DJModule : InteractionModuleBase<SocketInteractionContext>
     {
         private DJService djService;
+        private Fergun.Interactive.InteractiveService interactiveService;
 
-        public DJModule(DJService djService)
+        public DJModule(DJService djService, Fergun.Interactive.InteractiveService interactiveService)
         {
             this.djService = djService;
+            this.interactiveService = interactiveService;
         }
 
         [SlashCommand("join", "Joins the voice channel.")]
@@ -58,31 +66,32 @@ namespace TidesBotDotNet.Modules
         {
             var queue = djService.GetQueue(Context.Guild);
 
-            if (queue.Count == 0)
+            if (queue == null || queue.Count == 0)
             {
                 await RespondAsync("The queue is empty.", ephemeral: true);
                 return;
             }
 
-            EmbedBuilder output = new EmbedBuilder();
-
-            output.WithTitle($"Queue ({queue.Count} Entries)");
-            output.WithColor(Color.DarkBlue);
-
-            var currentTrack = djService.GetCurrentlyPlaying(Context.Guild);
-            var currentPosition = djService.GetCurrentPosition(Context.Guild);
-
-            output.AddField($"**Currently Playing** 🎶 {currentTrack.Title}",
-                $"[link]({currentTrack.Source}) {(currentTrack.Duration - currentPosition.Position).ToString(@"hh\:mm\:ss")} left [...]");
-
-            int trackPosition = 1;
-            foreach (var track in queue)
+            List<PageBuilder> pages = new List<PageBuilder>();
+            for(int pageIdx = 0; pageIdx < ((queue.Count)/10)+1; pageIdx++)
             {
-                output.AddField($"{trackPosition}. {track.Title}", $"[link]({track.Source}) {track.Duration} [...]");
-                trackPosition++;
+                int queuePos = pageIdx * 10;
+                if (queuePos >= queue.Count) break;
+                pages.Add(new PageBuilder());
+                for(int j = pageIdx * 10; j < (pageIdx*10)+10; j++)
+                {
+                    if (j >= queue.Count) break;
+                    var context = (TrackContext)queue[j].Context!;
+                    pages[pageIdx].AddField($"{j+1}. {queue[j].Title}", $"[link]({queue[j].Source}) {queue[j].Duration} [{context.RequesterName}]");
+                }
             }
 
-            await RespondAsync("", embed: output.Build());
+            var paginator = new StaticPaginatorBuilder()
+                .WithPages(pages) // Set the pages the paginator will use. This is the only required component.
+                .Build();
+
+            await RespondAsync($"Showing Song Queue at {DateTime.UtcNow.ToString()} UTC.", ephemeral: true);
+            await interactiveService.SendPaginatorAsync(paginator, Context.Channel, TimeSpan.FromMinutes(10));
         }
 
         [SlashCommand("now", "Shows the current playing song.")]
@@ -97,10 +106,11 @@ namespace TidesBotDotNet.Modules
             }
 
             var currentPosition = djService.GetCurrentPosition(Context.Guild);
+            var context = (TrackContext)currentTrack.Context!;
 
             await RespondAsync(
                 $"**Currently Playing** 🎶 `{currentTrack.Title}` ({currentPosition.Position.ToString(@"hh\:mm\:ss")}" +
-                $"/{currentTrack.Duration}) [...]");
+                $"/{currentTrack.Duration}) [{context.RequesterName}]");
         }
 
         [SlashCommand("remove", "Removes an entry from the queue.")]
@@ -160,13 +170,25 @@ namespace TidesBotDotNet.Modules
             await RespondAsync(r.Item1);
         }
 
-        [SlashCommand("skip", "Vote to skip the current song.")]
+        [SlashCommand("vote-skip", "Vote to skip the current song.")]
         public async Task SkipSong()
         {
             var r = await djService.VoteToSkip(Context.Guild, Context.User);
             if (r.Item2 != null)
             {
                 await RespondAsync($"Exception occured when trying to vote skip: {r.Item2.ToString()}", ephemeral: true);
+                return;
+            }
+            await RespondAsync(r.Item1);
+        }
+
+        [SlashCommand("force-skip", "Force skip the song")]
+        public async Task ForceSkip()
+        {
+            var r = await djService.Skip(Context.Guild, Context.User);
+            if (r.Item2 != null)
+            {
+                await RespondAsync($"Exception occured when trying to force skip: {r.Item2.ToString()}", ephemeral: true);
                 return;
             }
             await RespondAsync(r.Item1);

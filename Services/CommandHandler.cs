@@ -3,10 +3,8 @@ using Discord.WebSocket;
 using Discord.Interactions;
 using System.Reflection;
 using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
-using TidesBotDotNet.Modules;
 using Discord;
 
 namespace TidesBotDotNet.Services
