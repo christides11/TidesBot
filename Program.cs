@@ -24,10 +24,7 @@ namespace TidesBotDotNet
         public IServiceProvider BuildServiceProvider() => new ServiceCollection()
             .AddSingleton(x => new DiscordSocketClient(new DiscordSocketConfig
             {
-                GatewayIntents = GatewayIntents.All
-                    & ~(GatewayIntents.GuildPresences
-                    | GatewayIntents.GuildScheduledEvents
-                    | GatewayIntents.GuildInvites),
+                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers | GatewayIntents.MessageContent,
                 LogGatewayIntentWarnings = false,
                 AlwaysDownloadUsers = true,
                 LogLevel = LogSeverity.Debug,
@@ -54,6 +51,7 @@ namespace TidesBotDotNet
             .AddSingleton<ReactionRoleService>()
             .AddSingleton<AutoRolesService>()
             .AddSingleton<DJService>()
+            .AddSingleton<TwitchService>()
             .BuildServiceProvider();
 
         private IServiceProvider provider;

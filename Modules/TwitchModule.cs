@@ -14,12 +14,9 @@ namespace TidesBotDotNet.Modules
 
         public static TwitchService twitchService;
 
-        public TwitchModule(DiscordSocketClient client)
+        public TwitchModule(DiscordSocketClient client, TwitchService twitchService)
         {
-            if(twitchService == null)
-            {
-                twitchService = new TwitchService(client);
-            }
+            TwitchModule.twitchService = twitchService;
         }
 
         [SlashCommand("info", "Print information on twitch info for this server.")]

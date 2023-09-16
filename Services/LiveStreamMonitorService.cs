@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
@@ -98,6 +99,7 @@ namespace TidesBotDotNet.Services
                             addedUsers.Add(users.Users[i].Login);
                         }
                     }
+                    int c = 0;
                 }
                 return addedUsers;
             }
@@ -140,7 +142,7 @@ namespace TidesBotDotNet.Services
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void Tick(object sender, ElapsedEventArgs e)
+        public async void Tick(object sender, ElapsedEventArgs e)
         {
             if(ticking == true)
             {
@@ -183,11 +185,16 @@ namespace TidesBotDotNet.Services
                     // User was not live before.
                     else
                     {
+                        Console.WriteLine("User was not tracked before.");
                         if (LiveStreams.TryAdd(s[i].UserName, s[i]))
                         {
                             // Invoke event.
                             OnStreamArgs oso = new OnStreamArgs(s[i].UserName, s[i]);
                             OnStreamOnline?.Invoke(this, oso);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"ERROR adding user to livestreams list.");
                         }
                     }
                 }
@@ -196,6 +203,7 @@ namespace TidesBotDotNet.Services
             }
             ticking = false;
 
+            Console.WriteLine($"LSMS Tick.");
             SaveLoadService.Save(monitoredUsersFilename, LiveStreams);
         }
 
@@ -227,15 +235,18 @@ namespace TidesBotDotNet.Services
         /// <returns>A list of all the live streams.</returns>
         public async Task<Stream[]> GetStreams()
         {
-            if(usersBeingTracked == null || usersBeingTracked.Count() == 0)
+            if(usersBeingTracked == null)
+            {
+                return null;
+            }
+            if(usersBeingTracked.Count() == 0)
             {
                 return null;
             }
 
             try
             {
-                GetStreamsResponse liveStreams = await api.Helix.Streams.GetStreamsAsync(null, null, 100, null, null, 
-                    "live", null, usersBeingTracked.ToList());
+                GetStreamsResponse liveStreams = await api.Helix.Streams.GetStreamsAsync(first: 100, userLogins: usersBeingTracked.ToList());
                 return liveStreams.Streams;
             }catch(Exception e)
             {

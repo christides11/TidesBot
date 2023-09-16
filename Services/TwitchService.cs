@@ -49,6 +49,7 @@ namespace TidesBotDotNet.Services
                 Console.WriteLine("Twitch service disabled.");
                 return;
             }
+            Console.WriteLine("Twitch service starting up.");
             this.client = client;
             api = new TwitchAPI();
             TwitchKeys twitchKeys = SaveLoadService.Load<TwitchKeys>(twitchKeysFilename);
@@ -60,7 +61,7 @@ namespace TidesBotDotNet.Services
             //api.Settings.AccessToken = twitchKeys.accessToken;
             api.Settings.ClientId = twitchKeys.clientID;
             api.Settings.Secret = twitchKeys.secret;
-            monitorService = new LiveStreamMonitorService(api, 240);
+            monitorService = new LiveStreamMonitorService(api, 180);
             monitorService.OnStreamOnline += OnStreamOnline;
             monitorService.OnStreamOffline += OnStreamOffline;
             LoadData();
@@ -209,8 +210,7 @@ namespace TidesBotDotNet.Services
 
         public async Task<bool> CheckIfOnline(string username)
         {
-            var userList = await api.Helix.Streams.GetStreamsAsync(null, null, 20, null, null, 
-                "live", null, new List<string>() { username });
+            var userList = await api.Helix.Streams.GetStreamsAsync( userLogins: new List<string>() { username });
 
             if (userList != null)
             {
@@ -255,7 +255,7 @@ namespace TidesBotDotNet.Services
                             continue;
                         }
 
-                        var uc = await api.Helix.Users.GetUsersFollowsAsync(null, null, 1, null, e.Stream.UserId);
+                        //var uc = await api.Helix.Users.GetUsersFollowsAsync(null, null, 1, null, e.Stream.UserId);
                         var sGame = (await api.Helix.Games.GetGamesAsync(new List<string>() { e.Stream.GameId }));
                         var streamGame = sGame.Games.Count() > 0 ? sGame.Games[0] : null;
                         var streamGameName = streamGame == null ? "?" : streamGame.Name;
@@ -272,10 +272,11 @@ namespace TidesBotDotNet.Services
                             .AddField($"Current Viewers:", $"{e.Stream.ViewerCount}")
                             .AddField("Up For:", timeLiveString);
 
+                        /*
                         output.Footer = new EmbedFooterBuilder
                         {
                             Text = $"{uc.TotalFollows} followers."
-                        };
+                        };*/
 
                         int userPreviewMode = guild.previewMode;
 
