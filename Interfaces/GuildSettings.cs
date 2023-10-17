@@ -7,5 +7,6 @@ namespace TidesBotDotNet.Interfaces
     public class GuildSettings
     {
         public bool colorMe = true;
+        public bool vxLinks = false;
     }
 }

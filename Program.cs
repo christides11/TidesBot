@@ -51,6 +51,7 @@ namespace TidesBotDotNet
             .AddSingleton<ReactionRoleService>()
             .AddSingleton<AutoRolesService>()
             .AddSingleton<DJService>()
+            .AddSingleton<VxTwitterService>()
             .AddSingleton<TwitchService>()
             .BuildServiceProvider();
 
