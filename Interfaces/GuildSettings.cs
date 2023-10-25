@@ -8,5 +8,6 @@ namespace TidesBotDotNet.Interfaces
     {
         public bool colorMe = true;
         public bool vxLinks = false;
+        public bool streamRoles = false;
     }
 }

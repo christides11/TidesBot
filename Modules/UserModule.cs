@@ -41,15 +41,17 @@ namespace TidesBotDotNet.Modules
                 await RespondAsync("Invalid hex code.", ephemeral: true);
                 return;
             }
+
+            var currentRole = Context.Guild.GetUser(Context.User.Id).Roles.LastOrDefault(x => x.Name != roleName);
             // Check if the user already has a color role.
             IRole colorRole = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
             // Get where this role should go so it works, which is right above their current role.
-            int highestRole = Context.Guild.GetUser(Context.User.Id).Roles.LastOrDefault(x => x.Name != roleName).Position+1;
+            int highestRole = currentRole.Position+1;
 
             // Create the role if needed.
             if (colorRole == null)
             {
-                colorRole = await Context.Guild.CreateRoleAsync(roleName, null, roleColor, false);
+                colorRole = await Context.Guild.CreateRoleAsync(roleName, currentRole.Permissions, roleColor, false, false);
                 await colorRole.ModifyAsync(new Action<RoleProperties>(x => x.Position = highestRole));
             }
             else

@@ -43,6 +43,14 @@ namespace TidesBotDotNet.Modules
                 gd.SaveSettings();
                 await RespondAsync($"VxTwitter is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
             }
+
+            [SlashCommand("streamrole", "Set streamrole enabled state.")]
+            public async Task StreamRole(bool enabled)
+            {
+                gd.GetSettings(Context.Guild.Id).streamRoles = enabled;
+                gd.SaveSettings();
+                await RespondAsync($"StreamRole is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
+            }
         }
     }
 }

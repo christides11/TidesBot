@@ -15,7 +15,6 @@ namespace TidesBotDotNet.Services
 
         public VxTwitterService(DiscordSocketClient client, GuildsDefinition gd)
         {
-            Console.WriteLine("VX TWITTER SERVICE STARTED");
             this.client = client;
             this.guildsDefinition = gd;
             client.MessageReceived += WhenMessageSent;
