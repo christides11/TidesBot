@@ -22,29 +22,41 @@ namespace TidesBotDotNet.Services
 
         private async Task WhenMessageSent(SocketMessage arg)
         {
-            var msg = arg as SocketUserMessage;
-            var chnl = msg.Channel as SocketGuildChannel;
-            var Guild = chnl.Guild;
-
-            if (!guildsDefinition.GetSettings(Guild.Id).vxLinks) return;
-            if (!msg.Content.Contains("https://twitter.com") && !msg.Content.Contains("https://x.com")
-                && !msg.Content.Contains("https://www.twitter.com") && !msg.Content.Contains("https://www.x.com")) return;
-            if (msg.Author.IsBot) return;
-
-            var msgContent = msg.Content;
-            var msgUsername = msg.Author.Username;
-            var msgAvatar = msg.Author.GetAvatarUrl();
-            msgContent = msgContent.Replace("www.", "");
-            msgContent = msgContent.Replace("https://twitter.com", "https://vxtwitter.com");
-            msgContent = msgContent.Replace("https://x.com", "https://fixvx.com");
-            await msg.DeleteAsync();
-
-            RestWebhook wh = await CreateOrGetWebhook(chnl);
-
-            var DCW = new DiscordWebhookClient(wh);
-            using (var client = DCW)
+            try
             {
-                await client.SendMessageAsync($"{msgContent}", username: msgUsername, avatarUrl: msgAvatar);
+                var msg = arg as SocketUserMessage;
+                var chnl = msg.Channel as SocketGuildChannel;
+                var Guild = chnl.Guild;
+
+                if (!guildsDefinition.GetSettings(Guild.Id).vxLinks) return;
+                if (!msg.Content.Contains("https://twitter.com") && !msg.Content.Contains("https://x.com")
+                    && !msg.Content.Contains("https://www.twitter.com") && !msg.Content.Contains("https://www.x.com")
+                    && !msg.Content.Contains("https://www.instagram.com") && !msg.Content.Contains("https://instagram.com")
+                    && !msg.Content.Contains("https://www.tiktok.com") && !msg.Content.Contains("https://tiktok.com")) return;
+                if (msg.Author.IsBot) return;
+
+                var msgContent = msg.Content;
+                msgContent = msgContent.Replace("www.", "");
+                if (!msgContent.Contains("status") && (msg.Content.Contains("https://x.com") || msg.Content.Contains("https://twitter.com"))) return;
+
+                var UNick = (msg.Author as SocketGuildUser).Nickname == null ? msg.Author.Username : (msg.Author as SocketGuildUser).Nickname;
+                var msgAvatar = msg.Author.GetAvatarUrl();
+                msgContent = msgContent.Replace("https://twitter.com", "https://vxtwitter.com");
+                msgContent = msgContent.Replace("https://x.com", "https://fixvx.com");
+                msgContent = msgContent.Replace("https://instagram.com", "https://ddinstagram.com");
+                msgContent = msgContent.Replace("https://tiktok.com", "https://vxtiktok.com");
+                await msg.DeleteAsync();
+
+                RestWebhook wh = await CreateOrGetWebhook(chnl);
+
+                var DCW = new DiscordWebhookClient(wh);
+                using (var client = DCW)
+                {
+                    await client.SendMessageAsync($"{msgContent}", username: UNick, avatarUrl: msgAvatar);
+                }
+            }catch(Exception e)
+            {
+                Console.WriteLine($"Error when trying to Vx link: {e.Message}");
             }
         }
 
