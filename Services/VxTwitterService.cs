@@ -41,8 +41,8 @@ namespace TidesBotDotNet.Services
 
                 var UNick = (msg.Author as SocketGuildUser).Nickname == null ? msg.Author.Username : (msg.Author as SocketGuildUser).Nickname;
                 var msgAvatar = msg.Author.GetAvatarUrl();
+                msgContent = msgContent.Replace("https://x.com", "https://twitter.com");
                 msgContent = msgContent.Replace("https://twitter.com", "https://vxtwitter.com");
-                msgContent = msgContent.Replace("https://x.com", "https://fixvx.com");
                 msgContent = msgContent.Replace("https://instagram.com", "https://ddinstagram.com");
                 msgContent = msgContent.Replace("https://tiktok.com", "https://vxtiktok.com");
                 await msg.DeleteAsync();
