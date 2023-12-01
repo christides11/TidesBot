@@ -168,8 +168,8 @@ namespace TidesBotDotNet.Services
                             OnStreamUpdate?.Invoke(this, onStreamUpdateArgs);
                             continue;
                         }
-                        // Different stream.
-                        else
+                        // Different stream and the time between the streams is at least an hour apart.
+                        else if ((s[i].StartedAt - LiveStreams[s[i].UserName].StartedAt).TotalHours > 1.0)
                         {
                             if (LiveStreams.TryRemove(s[i].UserName, out Stream v))
                             {
@@ -180,6 +180,11 @@ namespace TidesBotDotNet.Services
                                     OnStreamOnline?.Invoke(this, onStreamOnlineArgs);
                                 }
                             }
+                        }
+                        else
+                        {
+                            LiveStreams.Remove(s[i].UserName, out var v);
+                            LiveStreams.TryAdd(s[i].UserName, s[i]);
                         }
                     }
                     // User was not live before.
