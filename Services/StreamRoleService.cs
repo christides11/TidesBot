@@ -23,6 +23,22 @@ namespace TidesBotDotNet.Services
             {
                 this.guildID = guildID;
             }
+
+            public void RemoveUser(ulong discordID)
+            {
+                for(int i = users.Count-1; i >= 0; i--)
+                {
+                    if (users[i].Item1 != discordID) continue;
+                    users.RemoveAt(i);
+                }
+            }
+
+            public void AddUser(ulong discordID, string twitchUsername)
+            {
+                var u = users.FirstOrDefault(x => x.Item1 == discordID);
+                if (u.Item1 == discordID && u.Item2 == twitchUsername) return; 
+                users.Add((discordID, twitchUsername));
+            }
         }
 
         private readonly string streamRoleGuildInfoFilename = "streamroleguildinfo.json";
@@ -111,28 +127,27 @@ namespace TidesBotDotNet.Services
             return true;
         }
 
-        public async Task<bool> AddUser(ulong guildID, SocketGuildUser guildUser, string twitchUsername)
-        {
+        public async Task<string> AddUser(ulong guildID, SocketGuildUser guildUser, string twitchUsername)
+        {;
             if (!guilds.ContainsKey(guildID)) guilds.Add(guildID, new StreamRoleGuildDefinition(guildID));
             var g = guilds[guildID];
 
-            if (!(await TwitchUserExist(twitchUsername))) return false;
-            if (g.users.FirstOrDefault(x => x.Item1 == guildUser.Id).Item1 != 0) return false;
-            guilds[guildID].users.Add((guildUser.Id, twitchUsername));
+            if (!(await TwitchUserExist(twitchUsername))) return $"Twitch user {twitchUsername} does not exist.";
+            guilds[guildID].AddUser(guildUser.Id, twitchUsername);
             SaveData();
-            return true;
+            return null;
         }
 
-        public bool RemoveUser(ulong guildID, SocketGuildUser guildUser)
+        public string RemoveUser(ulong guildID, SocketGuildUser guildUser)
         {
-            if (!guilds.ContainsKey(guildID)) return false;
+            if (!guilds.ContainsKey(guildID)) return "No users registered in this guild.";
             var g = guilds[guildID];
 
             var v = g.users.FirstOrDefault(x => x.Item1 == guildUser.Id);
-            if (v.Item1 == 0) return false;
-            guilds[guildID].users.Remove(v);
+            if (v.Item1 == 0) return "User is not registered.";
+            guilds[guildID].RemoveUser(guildUser.Id);
             SaveData();
-            return true;
+            return null;
         }
 
         public async Task<bool> TwitchUserExist(string username)

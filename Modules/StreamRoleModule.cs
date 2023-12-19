@@ -46,10 +46,10 @@ namespace TidesBotDotNet.Modules
                 await RespondAsync("StreamRole is not enabled in this guild.", ephemeral: true);
                 return;
             }
-            bool result = await streamRoleService.AddUser(Context.Guild.Id, Context.User as SocketGuildUser, twitchUsername);
-            if (!result)
+            var result = await streamRoleService.AddUser(Context.Guild.Id, Context.User as SocketGuildUser, twitchUsername);
+            if (!string.IsNullOrEmpty(result))
             {
-                await RespondAsync("Error while trying to register. Please check your input and try again.", ephemeral: true);
+                await RespondAsync($"Error while trying to register: {result}", ephemeral: true);
                 return;
             }
             await RespondAsync("Successfully registered to stream role service.", ephemeral: true);
@@ -63,10 +63,10 @@ namespace TidesBotDotNet.Modules
                 await RespondAsync("StreamRole is not enabled in this guild.", ephemeral: true);
                 return;
             }
-            bool result = streamRoleService.RemoveUser(Context.Guild.Id, Context.User as SocketGuildUser);
-            if (!result)
+            var result = streamRoleService.RemoveUser(Context.Guild.Id, Context.User as SocketGuildUser);
+            if (!string.IsNullOrEmpty(result))
             {
-                await RespondAsync("Error while trying to unregister. Please check your input and try again.", ephemeral: true);
+                await RespondAsync($"Error while trying to unregister: {result}", ephemeral: true);
                 return;
             }
             await RespondAsync("Successfully unregistered to stream role service.", ephemeral: true);
