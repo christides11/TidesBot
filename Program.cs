@@ -53,6 +53,7 @@ namespace TidesBotDotNet
             .AddSingleton<VxTwitterService>()
             .AddSingleton<TwitchService>()
             .AddSingleton<StreamRoleService>()
+            .AddSingleton<DJService>()
             .BuildServiceProvider();
 
         private IServiceProvider provider;
