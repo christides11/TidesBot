@@ -84,6 +84,27 @@ namespace TidesBotDotNet.Modules
             await RespondAsync("Removed color role.");
         }
 
+        [SlashCommand("colorme-cleanup", "Cleanup any stray colorme roles.")]
+        [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
+        public async Task ColorMeCleanup()
+        {
+            var roles = Context.Guild.Roles.Where(x => x.Name.ToLower().Contains("colorme"));
+            if (roles.Count() == 0)
+            {
+                await RespondAsync("No stray roles.");
+                return;
+            }
+
+            string response = "";
+            foreach (var role in roles)
+            {
+                if (role.Members.Count() > 0) continue;
+                response += $"{role.Name}\n";
+            }
+            await RespondAsync($"Stray Roles: {response}");
+        }
+
         [SlashCommand("avatar", "Gets the avatar of the user.")]
         public async Task Avatar([Choice("32x32", 32), Choice("64x64", 64), Choice("128x128", 128), Choice("256x256", 256), Choice("512x512", 512), Choice("1024x1024", 1024), Choice("2048x2048", 2048)]ushort size, SocketUser users)
         {
