@@ -29,6 +29,7 @@ namespace TidesBotDotNet.Modules
             }
 
             [SlashCommand("colorme", "Set colorme enabled state.")]
+            [RequireOwner(Group = "Permission")]
             public async Task ColorMe(bool enabled)
             {
                 gd.GetSettings(Context.Guild.Id).colorMe = enabled;
@@ -37,6 +38,7 @@ namespace TidesBotDotNet.Modules
             }
 
             [SlashCommand("vxtwitter", "Set vxtwitter enabled state.")]
+            [RequireOwner(Group = "Permission")]
             public async Task VxTwitter(bool enabled)
             {
                 gd.GetSettings(Context.Guild.Id).vxLinks = enabled;
@@ -45,6 +47,7 @@ namespace TidesBotDotNet.Modules
             }
 
             [SlashCommand("streamrole", "Set streamrole enabled state.")]
+            [RequireOwner(Group = "Permission")]
             public async Task StreamRole(bool enabled)
             {
                 gd.GetSettings(Context.Guild.Id).streamRoles = enabled;
