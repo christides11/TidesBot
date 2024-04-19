@@ -10,6 +10,7 @@ namespace TidesBotDotNet.Interfaces
     {
         public static readonly string FILE_NAME = "guildsdefinition.json";
         public static readonly string REACTROLES_FILENAME = "reactroles.json";
+        public static readonly string FXTWITTER_OPTOUT_FILENAME = "fxtwitter-opts.json";
 
         private Dictionary<ulong, GuildSettings> settings = new Dictionary<ulong, GuildSettings>();
         public Dictionary<ulong, Dictionary<string, List<ReactRolesDefinition>>> reactRoles
@@ -19,7 +20,7 @@ namespace TidesBotDotNet.Interfaces
         {
             settings = SaveLoadService.Load<Dictionary<ulong, GuildSettings>>(FILE_NAME);
             reactRoles = SaveLoadService.Load<Dictionary<ulong, Dictionary<string, List<ReactRolesDefinition>>>>(REACTROLES_FILENAME);
-            if(settings == null)
+            if (settings == null)
             {
                 settings = new Dictionary<ulong, GuildSettings>();
                 SaveLoadService.Save(FILE_NAME, settings);

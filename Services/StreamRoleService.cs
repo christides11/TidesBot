@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
@@ -57,6 +58,11 @@ namespace TidesBotDotNet.Services
             this.guildsDefinition = gd;
             api = new TwitchAPI();
             TwitchKeys twitchKeys = SaveLoadService.Load<TwitchKeys>(twitchKeysFilename);
+            if(twitchKeys == null)
+            {
+                Console.WriteLine("ERROR: Could not load twitch keys.");
+                return;
+            }
             api.Settings.ClientId = twitchKeys.clientID;
             api.Settings.Secret = twitchKeys.secret;
             LoadData();

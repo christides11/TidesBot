@@ -9,5 +9,11 @@ namespace TidesBotDotNet.Interfaces
         public bool colorMe = true;
         public bool vxLinks = false;
         public bool streamRoles = false;
+        public HashSet<ulong> vxLinkOptOut = new HashSet<ulong>();
+
+        public bool IsUserOptedOut(ulong userID)
+        {
+            return vxLinkOptOut.Contains(userID);
+        }
     }
 }

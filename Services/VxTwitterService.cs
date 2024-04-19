@@ -28,12 +28,14 @@ namespace TidesBotDotNet.Services
                 var chnl = msg.Channel as SocketGuildChannel;
                 var Guild = chnl.Guild;
 
+                if (msg.Author.IsBot) return;
                 if (!guildsDefinition.GetSettings(Guild.Id).vxLinks) return;
+                if (guildsDefinition.GetSettings(Guild.Id).IsUserOptedOut(msg.Author.Id)) return;
                 if (!msg.Content.Contains("https://twitter.com") && !msg.Content.Contains("https://x.com")
                     && !msg.Content.Contains("https://www.twitter.com") && !msg.Content.Contains("https://www.x.com")
                     && !msg.Content.Contains("https://www.instagram.com") && !msg.Content.Contains("https://instagram.com")
-                    && !msg.Content.Contains("https://www.tiktok.com") && !msg.Content.Contains("https://tiktok.com")) return;
-                if (msg.Author.IsBot) return;
+                    && !msg.Content.Contains("https://www.tiktok.com") && !msg.Content.Contains("https://tiktok.com")
+                    && !msg.Content.Contains("https://vm.tiktok.com") ) return;
 
                 var msgContent = msg.Content;
                 msgContent = msgContent.Replace("www.", "");
@@ -45,6 +47,7 @@ namespace TidesBotDotNet.Services
                 msgContent = msgContent.Replace("https://twitter.com", "https://vxtwitter.com");
                 msgContent = msgContent.Replace("https://instagram.com", "https://ddinstagram.com");
                 msgContent = msgContent.Replace("https://tiktok.com", "https://vxtiktok.com");
+                msgContent = msgContent.Replace("https://vm.tiktok.com", "https://vm.tiktxk.com");
                 await msg.DeleteAsync();
 
                 RestWebhook wh = await CreateOrGetWebhook(chnl);

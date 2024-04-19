@@ -112,6 +112,40 @@ namespace TidesBotDotNet.Modules
             await AvatarTask(users, format, size);
         }
 
+        [SlashCommand("fxembed-opt-out", "Opt out of embed link fixing.")]
+        public async Task VxOptOut()
+        {
+            var userID = Context.User.Id;
+            // Check if the user is already opted out.
+            if (guildsDefinition.GetSettings(Context.Guild.Id).vxLinkOptOut.Contains(userID))
+            {
+                await RespondAsync("You are already opted out.", ephemeral: true);
+                return;
+            }
+
+            guildsDefinition.GetSettings(Context.Guild.Id).vxLinkOptOut.Add(userID);
+            guildsDefinition.SaveSettings();
+
+            await RespondAsync("Opted out of embed fix.", ephemeral: true);
+        }
+
+        [SlashCommand("fxembed-opt-in", "Opt in of embed link fixing.")]
+        public async Task VxOptIn()
+        {
+            var userID = Context.User.Id;
+            // Check if the user is already opted in..
+            if (!guildsDefinition.GetSettings(Context.Guild.Id).vxLinkOptOut.Contains(userID))
+            {
+                await RespondAsync("You are already opted in by default.", ephemeral: true);
+                return;
+            }
+
+            guildsDefinition.GetSettings(Context.Guild.Id).vxLinkOptOut.Remove(userID);
+            guildsDefinition.SaveSettings();
+
+            await RespondAsync("Opted in to embed fix.", ephemeral: true);
+        }
+
         public async Task AvatarTask(SocketUser user, ImageFormat format, ushort size)
         {
             EmbedBuilder output = new EmbedBuilder();
