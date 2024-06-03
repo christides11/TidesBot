@@ -27,27 +27,31 @@ namespace TidesBotDotNet.Services
                 var msg = arg as SocketUserMessage;
                 var chnl = msg.Channel as SocketGuildChannel;
                 var Guild = chnl.Guild;
+                var guildSettings = guildsDefinition.GetSettings(Guild.Id);
 
-                if (msg.Author.IsBot) return;
-                if (!guildsDefinition.GetSettings(Guild.Id).vxLinks) return;
-                if (guildsDefinition.GetSettings(Guild.Id).IsUserOptedOut(msg.Author.Id)) return;
-                if (!msg.Content.Contains("https://twitter.com") && !msg.Content.Contains("https://x.com")
-                    && !msg.Content.Contains("https://www.twitter.com") && !msg.Content.Contains("https://www.x.com")
-                    && !msg.Content.Contains("https://www.instagram.com") && !msg.Content.Contains("https://instagram.com")
-                    && !msg.Content.Contains("https://www.tiktok.com") && !msg.Content.Contains("https://tiktok.com")
-                    && !msg.Content.Contains("https://vm.tiktok.com") ) return;
+                if (msg.Author.IsBot
+                    || msg.MentionedUsers.Count > 0 
+                    || msg.MentionedRoles.Count > 0
+                    || msg.Content.Length >= 500
+                    || guildSettings.IsUserOptedOutOfXV(msg.Author.Id)
+                    || !msg.Content.Contains(".com")) return;
 
                 var msgContent = msg.Content;
                 msgContent = msgContent.Replace("www.", "");
-                if (!msgContent.Contains("status") && (msg.Content.Contains("https://x.com") || msg.Content.Contains("https://twitter.com"))) return;
 
-                var UNick = (msg.Author as SocketGuildUser).Nickname == null ? msg.Author.Username : (msg.Author as SocketGuildUser).Nickname;
-                var msgAvatar = msg.Author.GetAvatarUrl();
-                msgContent = msgContent.Replace("https://x.com", "https://twitter.com");
-                msgContent = msgContent.Replace("https://twitter.com", "https://vxtwitter.com");
-                msgContent = msgContent.Replace("https://instagram.com", "https://ddinstagram.com");
-                msgContent = msgContent.Replace("https://tiktok.com", "https://vxtiktok.com");
-                msgContent = msgContent.Replace("https://vm.tiktok.com", "https://vm.tiktxk.com");
+                var scTwitter = StringContainsTwitter(msgContent);
+                var scInstagram = StringContainsInstagram(msgContent);
+                var scTiktok = StringContainsTiktok(msgContent);
+                var scShortTiktok = StringContainsShortTiktok(msgContent);
+
+                if (scTwitter && !guildSettings.vxTwitter
+                    || scInstagram && !guildSettings.vxInstagram
+                    || scTiktok && !guildSettings.vxTiktok
+                    || scShortTiktok && !guildSettings.vxShortTiktok) return;
+
+                if (!scTwitter && !scInstagram && !scTiktok && !scShortTiktok) return;
+
+                GetVXedLink(msg.Author, msgContent, out var UNick, out var msgAvatar);
                 await msg.DeleteAsync();
 
                 RestWebhook wh = await CreateOrGetWebhook(chnl);
@@ -63,12 +67,60 @@ namespace TidesBotDotNet.Services
             }
         }
 
-        private static async Task<RestWebhook> CreateOrGetWebhook(SocketGuildChannel chnl)
+        public static string GetVXedLink(SocketUser user, string msgContent, out string userNickname, out string userAvatarURL)
+        {
+            userNickname = (user as SocketGuildUser).Nickname == null ? user.Username : (user as SocketGuildUser).Nickname;
+            userAvatarURL = user.GetAvatarUrl();
+            msgContent = msgContent.Replace("https://x.com", "https://twitter.com");
+            msgContent = msgContent.Replace("https://twitter.com", "https://vxtwitter.com");
+            msgContent = msgContent.Replace("https://instagram.com", "https://ddinstagram.com");
+            msgContent = msgContent.Replace("https://tiktok.com", "https://vxtiktok.com");
+            msgContent = msgContent.Replace("https://vm.tiktok.com", "https://vm.tiktxk.com");
+
+            return msgContent;
+        }
+
+        public static async Task<RestWebhook> CreateOrGetWebhook(SocketGuildChannel chnl)
         {
             var whs = await (chnl as SocketTextChannel).GetWebhooksAsync();
             var wh = whs.Where(x => x.Name == "vxtwit").FirstOrDefault();
             if (wh == null || wh == default(RestWebhook)) wh = await (chnl as SocketTextChannel).CreateWebhookAsync("vxtwit");
             return wh;
+        }
+
+        bool StringContainsAnyValid(string msg)
+        {
+            if(StringContainsTwitter(msg)
+                || StringContainsInstagram(msg)
+                || StringContainsTiktok(msg)
+                || StringContainsShortTiktok(msg)) return true;
+            return false;
+        }
+
+        bool StringContainsTwitter(string msg)
+        {
+            if ((msg.Contains("https://twitter.com") || msg.Contains("https://x.com"))
+                && msg.Contains("status")) return true;
+            return false;
+        }
+
+        bool StringContainsInstagram(string msg)
+        {
+            if (msg.Contains("https://instagram.com")
+                && (msg.Contains("reel/") || msg.Contains("reels/") || msg.Contains("/p/") ) ) return true;
+            return false;
+        }
+
+        bool StringContainsTiktok(string msg)
+        {
+            if (msg.Contains("https://tiktok.com") && msg.Contains("video")) return true;
+            return false;
+        }
+
+        bool StringContainsShortTiktok(string msg)
+        {
+            if (msg.Contains("https://vm.tiktok.com")) return true;
+            return false;
         }
     }
 }

@@ -41,9 +41,45 @@ namespace TidesBotDotNet.Modules
             [RequireOwner(Group = "Permission")]
             public async Task VxTwitter(bool enabled)
             {
-                gd.GetSettings(Context.Guild.Id).vxLinks = enabled;
+                gd.GetSettings(Context.Guild.Id).vxTwitter = enabled;
                 gd.SaveSettings();
                 await RespondAsync($"VxTwitter is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
+            }
+
+            [SlashCommand("fxtwitter", "Set fxtwitter enabled state.")]
+            [RequireOwner(Group = "Permission")]
+            public async Task FxTwitter(bool enabled)
+            {
+                gd.GetSettings(Context.Guild.Id).fxTwitter = enabled;
+                gd.SaveSettings();
+                await RespondAsync($"FxTwitter is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
+            }
+
+            [SlashCommand("vxtiktok", "Set vxtiktok (web link) enabled state.")]
+            [RequireOwner(Group = "Permission")]
+            public async Task VxTiktok(bool enabled)
+            {
+                gd.GetSettings(Context.Guild.Id).vxTiktok = enabled;
+                gd.SaveSettings();
+                await RespondAsync($"VxTiktok is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
+            }
+
+            [SlashCommand("vxstiktok", "Set vxtiktok (mobile link) enabled state.")]
+            [RequireOwner(Group = "Permission")]
+            public async Task VxSTiktok(bool enabled)
+            {
+                gd.GetSettings(Context.Guild.Id).vxShortTiktok = enabled;
+                gd.SaveSettings();
+                await RespondAsync($"VxSTiktok is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
+            }
+
+            [SlashCommand("vxinstagram", "Set vxinstagram enabled state.")]
+            [RequireOwner(Group = "Permission")]
+            public async Task VxInstagram(bool enabled)
+            {
+                gd.GetSettings(Context.Guild.Id).vxInstagram = enabled;
+                gd.SaveSettings();
+                await RespondAsync($"VxInstagram is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
             }
 
             [SlashCommand("streamrole", "Set streamrole enabled state.")]

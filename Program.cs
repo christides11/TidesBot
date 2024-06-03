@@ -45,7 +45,7 @@ namespace TidesBotDotNet
                 TrackInactivity = true
              })
             .AddSingleton<InactivityTrackingService>()
-            .AddSingleton<InteractionService>()
+            .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
             .AddSingleton<Fergun.Interactive.InteractiveService>()
             .AddSingleton<CommandHandler>()
             .AddSingleton<ReactionRoleService>()

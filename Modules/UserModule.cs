@@ -1,12 +1,16 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Discord.Rest;
+using Discord.Webhook;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reactive;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
+using TidesBotDotNet.Services;
 
 namespace TidesBotDotNet.Modules
 {
@@ -186,6 +190,20 @@ namespace TidesBotDotNet.Modules
         {
             
             await RespondAsync(String.Join(' ', message));
+        }
+
+        [SlashCommand("vx", "VX any links in the message.")]
+        public async Task AutoVX(string message)
+        {
+            var msgContent = VxTwitterService.GetVXedLink(Context.User, message, out string userNickname, out string userAvatarURL);
+
+            RestWebhook wh = await VxTwitterService.CreateOrGetWebhook(Context.Channel as SocketGuildChannel);
+
+            var DCW = new DiscordWebhookClient(wh);
+            using (var client = DCW)
+            {
+                await client.SendMessageAsync($"{msgContent}", username: userNickname, avatarUrl: userAvatarURL);
+            }
         }
 
         private async Task PrintUserInfo(SocketGuildUser user)
