@@ -32,9 +32,11 @@ namespace TidesBotDotNet.Services
                 if (msg.Author.IsBot
                     || msg.MentionedUsers.Count > 0 
                     || msg.MentionedRoles.Count > 0
+                    || msg.Reference != null
                     || msg.Content.Length >= 500
                     || guildSettings.IsUserOptedOutOfXV(msg.Author.Id)
-                    || !msg.Content.Contains(".com")) return;
+                    || !msg.Content.Contains(".com")
+                    || !msg.Content.Contains("https://")) return;
 
                 var msgContent = msg.Content;
                 msgContent = msgContent.Replace("www.", "");
@@ -67,12 +69,13 @@ namespace TidesBotDotNet.Services
             }
         }
 
-        public static string GetVXedLink(SocketUser user, string msgContent, out string userNickname, out string userAvatarURL)
+        public static string GetVXedLink(SocketUser user, string msgContent, out string userNickname, out string userAvatarURL, bool useFxInstead = false)
         {
             userNickname = (user as SocketGuildUser).Nickname == null ? user.Username : (user as SocketGuildUser).Nickname;
             userAvatarURL = user.GetAvatarUrl();
-            msgContent = msgContent.Replace("https://x.com", "https://twitter.com");
-            msgContent = msgContent.Replace("https://twitter.com", "https://vxtwitter.com");
+            msgContent = msgContent.Replace("https://twitter.com", "https://x.com");
+            if(!useFxInstead) msgContent = msgContent.Replace("https://x.com", "https://fixvx.com");
+            else msgContent = msgContent.Replace("https://x.com", "https://fixupx.com");
             msgContent = msgContent.Replace("https://instagram.com", "https://ddinstagram.com");
             msgContent = msgContent.Replace("https://tiktok.com", "https://vxtiktok.com");
             msgContent = msgContent.Replace("https://vm.tiktok.com", "https://vm.tiktxk.com");
