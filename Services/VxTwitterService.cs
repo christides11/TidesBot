@@ -46,14 +46,14 @@ namespace TidesBotDotNet.Services
                 var scTiktok = StringContainsTiktok(msgContent);
                 var scShortTiktok = StringContainsShortTiktok(msgContent);
 
-                if (scTwitter && !guildSettings.vxTwitter
+                if (scTwitter && !guildSettings.vxTwitter && !guildSettings.fxTwitter
                     || scInstagram && !guildSettings.vxInstagram
                     || scTiktok && !guildSettings.vxTiktok
                     || scShortTiktok && !guildSettings.vxShortTiktok) return;
 
                 if (!scTwitter && !scInstagram && !scTiktok && !scShortTiktok) return;
 
-                msgContent = GetVXedLink(msg.Author, msgContent, out var UNick, out var msgAvatar);
+                msgContent = GetVXedLink(msg.Author, msgContent, out var UNick, out var msgAvatar, guildSettings.fxTwitter);
                 await msg.DeleteAsync();
 
                 RestWebhook wh = await CreateOrGetWebhook(chnl);

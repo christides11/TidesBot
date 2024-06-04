@@ -195,7 +195,21 @@ namespace TidesBotDotNet.Modules
         [SlashCommand("vx", "VX any links in the message.")]
         public async Task AutoVX(string message)
         {
-            var msgContent = VxTwitterService.GetVXedLink(Context.User, message, out string userNickname, out string userAvatarURL);
+            var msgContent = VxTwitterService.GetVXedLink(Context.User, message, out string userNickname, out string userAvatarURL, false);
+
+            RestWebhook wh = await VxTwitterService.CreateOrGetWebhook(Context.Channel as SocketGuildChannel);
+
+            var DCW = new DiscordWebhookClient(wh);
+            using (var client = DCW)
+            {
+                await client.SendMessageAsync($"{msgContent}", username: userNickname, avatarUrl: userAvatarURL);
+            }
+        }
+
+        [SlashCommand("fx", "FX any links in the message.")]
+        public async Task AutoFX(string message)
+        {
+            var msgContent = VxTwitterService.GetVXedLink(Context.User, message, out string userNickname, out string userAvatarURL, true);
 
             RestWebhook wh = await VxTwitterService.CreateOrGetWebhook(Context.Channel as SocketGuildChannel);
 
