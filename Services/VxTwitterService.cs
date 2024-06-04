@@ -51,7 +51,7 @@ namespace TidesBotDotNet.Services
 
                 if (!scTwitter && !scInstagram && !scTiktok && !scShortTiktok) return;
 
-                GetVXedLink(msg.Author, msgContent, out var UNick, out var msgAvatar);
+                msgContent = GetVXedLink(msg.Author, msgContent, out var UNick, out var msgAvatar);
                 await msg.DeleteAsync();
 
                 RestWebhook wh = await CreateOrGetWebhook(chnl);
