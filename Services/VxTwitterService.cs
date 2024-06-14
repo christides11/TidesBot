@@ -3,6 +3,7 @@ using Discord.Rest;
 using Discord.Webhook;
 using Discord.WebSocket;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
@@ -14,11 +15,35 @@ namespace TidesBotDotNet.Services
         private DiscordSocketClient client;
         public GuildsDefinition guildsDefinition;
 
+        private Dictionary<ulong, ulong> lastVxedMessages = new Dictionary<ulong, ulong>();
+        private Dictionary<ulong, IMessage> messageBuffer = new Dictionary<ulong, IMessage>();
+
         public VxTwitterService(DiscordSocketClient client, GuildsDefinition gd)
         {
             this.client = client;
             this.guildsDefinition = gd;
             client.MessageReceived += WhenMessageSent;
+            client.MessageDeleted += WhenMessageDeleted;
+        }
+
+        private async Task WhenMessageDeleted(Cacheable<IMessage, ulong> cacheable1, Cacheable<IMessageChannel, ulong> cacheable2)
+        {
+            var msgID = cacheable1.Id;
+
+            if (!lastVxedMessages.ContainsKey(msgID)) return;
+            var botMsgID = lastVxedMessages[msgID];
+            if (!messageBuffer.ContainsKey(botMsgID)) return;
+
+            try
+            {
+                await messageBuffer[botMsgID].DeleteAsync();
+            }catch (Exception ex)
+            {
+                Console.WriteLine($"Could not delete old message. {ex}");
+            }
+
+            lastVxedMessages.Remove(msgID);
+            messageBuffer.Remove(botMsgID);
         }
 
         private async Task WhenMessageSent(SocketMessage arg)
@@ -80,17 +105,21 @@ namespace TidesBotDotNet.Services
 
                     if (string.IsNullOrEmpty(stringWithOnlyLinks)) return;
 
-                    await msg.ModifyAsync(p =>
-                    {
-                        if (p.Flags is { IsSpecified: true, Value: not null })
-                            p.Flags = MessageFlags.SuppressEmbeds;
-                    });
+                    await msg.ModifyAsync(p => p.Flags = MessageFlags.SuppressEmbeds);
 
-                    await msg.ReplyAsync(stringWithOnlyLinks, flags: MessageFlags.SuppressNotification);
+                    var replyMessage = await msg.ReplyAsync(stringWithOnlyLinks, flags: MessageFlags.SuppressNotification);
+
+                    if(lastVxedMessages.Count > 20)
+                    {
+                        lastVxedMessages.Clear();
+                        messageBuffer.Clear();
+                    }
+                    lastVxedMessages.Add(msg.Id, replyMessage.Id);
+                    messageBuffer.Add(replyMessage.Id, replyMessage);
                 }
             }catch(Exception e)
             {
-                Console.WriteLine($"Error when trying to Vx link: {e.Message}");
+                Console.WriteLine($"Error when trying to Vx link: {e}");
             }
         }
 

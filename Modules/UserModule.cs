@@ -162,6 +162,7 @@ namespace TidesBotDotNet.Modules
         [RequireOwner(Group = "Permission")]
         public async Task Purge(int amount)
         {
+            if (amount > 20) return;
             try
             {
                 IEnumerable<IMessage> messages = await Context.Channel.GetMessagesAsync(amount + 1).FlattenAsync();
