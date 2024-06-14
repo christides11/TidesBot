@@ -90,6 +90,15 @@ namespace TidesBotDotNet.Modules
                 gd.SaveSettings();
                 await RespondAsync($"StreamRole is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
             }
+
+            [SlashCommand("newVxMethod", "Use the new vx method.")]
+            [RequireOwner(Group = "Permission")]
+            public async Task UseNewVXMethod(bool enabled)
+            {
+                gd.GetSettings(Context.Guild.Id).newVXMethod = enabled;
+                gd.SaveSettings();
+                await RespondAsync($"New VX Method is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
+            }
         }
     }
 }

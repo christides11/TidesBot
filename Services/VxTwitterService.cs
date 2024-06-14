@@ -1,4 +1,5 @@
-﻿using Discord.Rest;
+﻿using Discord;
+using Discord.Rest;
 using Discord.Webhook;
 using Discord.WebSocket;
 using System;
@@ -28,9 +29,8 @@ namespace TidesBotDotNet.Services
                 var chnl = msg.Channel as SocketGuildChannel;
                 var Guild = chnl.Guild;
                 var guildSettings = guildsDefinition.GetSettings(Guild.Id);
-
                 if (msg.Author.IsBot
-                    || msg.MentionedUsers.Count > 0 
+                    || msg.MentionedUsers.Count > 0
                     || msg.MentionedRoles.Count > 0
                     || msg.Reference != null
                     || msg.Content.Length >= 500
@@ -50,18 +50,43 @@ namespace TidesBotDotNet.Services
                     || scInstagram && !guildSettings.vxInstagram
                     || scTiktok && !guildSettings.vxTiktok
                     || scShortTiktok && !guildSettings.vxShortTiktok) return;
-
                 if (!scTwitter && !scInstagram && !scTiktok && !scShortTiktok) return;
 
                 msgContent = GetVXedLink(msg.Author, msgContent, out var UNick, out var msgAvatar, guildSettings.fxTwitter);
-                await msg.DeleteAsync();
 
-                RestWebhook wh = await CreateOrGetWebhook(chnl);
-
-                var DCW = new DiscordWebhookClient(wh);
-                using (var client = DCW)
+                if (guildSettings.newVXMethod == false)
                 {
-                    await client.SendMessageAsync($"{msgContent}", username: UNick, avatarUrl: msgAvatar);
+                    await msg.DeleteAsync();
+
+                    RestWebhook wh = await CreateOrGetWebhook(chnl);
+
+                    var DCW = new DiscordWebhookClient(wh);
+                    using (var client = DCW)
+                    {
+                        await client.SendMessageAsync($"{msgContent}", username: UNick, avatarUrl: msgAvatar, allowedMentions: new Discord.AllowedMentions() { });
+                    }
+                }
+                else
+                {
+                    var partsOfString = msgContent.Split(" ").Where(s => s.Contains("https")).ToArray();
+
+                    var stringWithOnlyLinks = "";
+
+                    for(int i = 0; i < partsOfString.Length; i++)
+                    {
+                        stringWithOnlyLinks += partsOfString[i];
+                        if (i < partsOfString.Length - 1) stringWithOnlyLinks += "\n";
+                    }
+
+                    if (string.IsNullOrEmpty(stringWithOnlyLinks)) return;
+
+                    await msg.ModifyAsync(p =>
+                    {
+                        if (p.Flags is { IsSpecified: true, Value: not null })
+                            p.Flags = MessageFlags.SuppressEmbeds;
+                    });
+
+                    await msg.ReplyAsync(stringWithOnlyLinks, flags: MessageFlags.SuppressNotification);
                 }
             }catch(Exception e)
             {

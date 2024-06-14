@@ -13,6 +13,7 @@ namespace TidesBotDotNet.Interfaces
         public bool vxShortTiktok = false;
         public bool vxInstagram = false;
         public bool streamRoles = false;
+        public bool newVXMethod = false;
         public HashSet<ulong> vxLinkOptOut = new HashSet<ulong>();
 
         public bool IsUserOptedOutOfXV(ulong userID)
