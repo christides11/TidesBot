@@ -29,7 +29,6 @@ namespace TidesBotDotNet.Services
         private async Task WhenMessageDeleted(Cacheable<IMessage, ulong> cacheable1, Cacheable<IMessageChannel, ulong> cacheable2)
         {
             var msgID = cacheable1.Id;
-
             if (!lastVxedMessages.ContainsKey(msgID)) return;
             var botMsgID = lastVxedMessages[msgID];
             if (!messageBuffer.ContainsKey(botMsgID)) return;
@@ -106,16 +105,15 @@ namespace TidesBotDotNet.Services
                     if (string.IsNullOrEmpty(stringWithOnlyLinks)) return;
 
                     await msg.ModifyAsync(p => p.Flags = MessageFlags.SuppressEmbeds);
+                    var botMessage = await msg.Channel.SendMessageAsync(stringWithOnlyLinks);
 
-                    var replyMessage = await msg.ReplyAsync(stringWithOnlyLinks, flags: MessageFlags.SuppressNotification);
-
-                    if(lastVxedMessages.Count > 20)
+                    if(lastVxedMessages.Count > 30)
                     {
                         lastVxedMessages.Clear();
                         messageBuffer.Clear();
                     }
-                    lastVxedMessages.Add(msg.Id, replyMessage.Id);
-                    messageBuffer.Add(replyMessage.Id, replyMessage);
+                    lastVxedMessages.Add(msg.Id, botMessage.Id);
+                    messageBuffer.Add(botMessage.Id, botMessage);
                 }
             }catch(Exception e)
             {
