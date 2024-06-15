@@ -3,6 +3,7 @@ using Discord.Rest;
 using Discord.Webhook;
 using Discord.WebSocket;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,8 +16,11 @@ namespace TidesBotDotNet.Services
         private DiscordSocketClient client;
         public GuildsDefinition guildsDefinition;
 
-        private Dictionary<ulong, ulong> lastVxedMessages = new Dictionary<ulong, ulong>();
-        private Dictionary<ulong, IMessage> messageBuffer = new Dictionary<ulong, IMessage>();
+        // User Message ID : Bot Message ID
+        private ConcurrentDictionary<ulong, ulong> lastVxedMessages = new ConcurrentDictionary<ulong, ulong>();
+        // Bot Message ID : Bot Message
+        private ConcurrentDictionary<ulong, IMessage> messageBuffer = new ConcurrentDictionary<ulong, IMessage>();
+        private List<ulong> messageQueue = new List<ulong>();
 
         public VxTwitterService(DiscordSocketClient client, GuildsDefinition gd)
         {
@@ -41,8 +45,9 @@ namespace TidesBotDotNet.Services
                 Console.WriteLine($"Could not delete old message. {ex}");
             }
 
-            lastVxedMessages.Remove(msgID);
-            messageBuffer.Remove(botMsgID);
+            lastVxedMessages.Remove(msgID, out var outp);
+            messageBuffer.Remove(botMsgID, out var mss);
+            messageQueue.Remove(msgID);
         }
 
         private async Task WhenMessageSent(SocketMessage arg)
@@ -107,18 +112,32 @@ namespace TidesBotDotNet.Services
                     await msg.ModifyAsync(p => p.Flags = MessageFlags.SuppressEmbeds);
                     var botMessage = await msg.Channel.SendMessageAsync(stringWithOnlyLinks);
 
-                    if(lastVxedMessages.Count > 30)
-                    {
-                        lastVxedMessages.Clear();
-                        messageBuffer.Clear();
-                    }
-                    lastVxedMessages.Add(msg.Id, botMessage.Id);
-                    messageBuffer.Add(botMessage.Id, botMessage);
+                    TryCleanupMessageQueue();
+
+                    lastVxedMessages.TryAdd(msg.Id, botMessage.Id);
+                    messageBuffer.TryAdd(botMessage.Id, botMessage);
+                    messageQueue.Add(msg.Id);
                 }
             }catch(Exception e)
             {
                 Console.WriteLine($"Error when trying to Vx link: {e}");
             }
+        }
+
+        private void TryCleanupMessageQueue()
+        {
+            if (messageQueue.Count <= 30) return;
+
+            if (lastVxedMessages.TryGetValue(messageQueue[0], out ulong botMessageID))
+            {
+                lastVxedMessages.Remove(messageQueue[0], out var outVal);
+
+                if(messageBuffer.TryGetValue(botMessageID, out var message))
+                {
+                    messageBuffer.Remove(botMessageID, out var v);
+                }
+            }
+            messageQueue.RemoveAt(0);
         }
 
         public static string GetVXedLink(SocketUser user, string msgContent, out string userNickname, out string userAvatarURL, bool useFxInstead = false)
