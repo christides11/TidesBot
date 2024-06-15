@@ -54,9 +54,6 @@ namespace TidesBotDotNet.Services
                 var Guild = chnl.Guild;
                 var guildSettings = guildsDefinition.GetSettings(Guild.Id);
                 if (msg.Author.IsBot
-                    || msg.MentionedUsers.Count > 0
-                    || msg.MentionedRoles.Count > 0
-                    || msg.Reference != null
                     || msg.Content.Length >= 500
                     || guildSettings.IsUserOptedOutOfXV(msg.Author.Id)
                     || !msg.Content.Contains(".com")
@@ -80,6 +77,9 @@ namespace TidesBotDotNet.Services
 
                 if (guildSettings.newVXMethod == false)
                 {
+                    if (msg.Reference != null || msg.MentionedUsers.Count > 0 || msg.MentionedRoles.Count > 0)
+                        return;
+
                     await msg.DeleteAsync();
 
                     RestWebhook wh = await CreateOrGetWebhook(chnl);
@@ -92,7 +92,7 @@ namespace TidesBotDotNet.Services
                 }
                 else
                 {
-                    var partsOfString = msgContent.Split(" ").Where(s => s.Contains("https")).ToArray();
+                    var partsOfString = msgContent.Replace("\n", " ").Split(" ").Where(s => s.Contains("https")).ToArray();
 
                     var stringWithOnlyLinks = "";
 
