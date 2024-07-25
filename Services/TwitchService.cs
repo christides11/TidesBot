@@ -58,7 +58,7 @@ namespace TidesBotDotNet.Services
                 twitchKeys = new TwitchKeys();
                 SaveLoadService.Save(twitchKeysFilename, twitchKeys);
             }
-            //api.Settings.AccessToken = twitchKeys.accessToken;
+            api.Settings.AccessToken = twitchKeys.accessToken;
             api.Settings.ClientId = twitchKeys.clientID;
             api.Settings.Secret = twitchKeys.secret;
             monitorService = new LiveStreamMonitorService(api, 180);
