@@ -54,7 +54,7 @@ namespace TidesBotDotNet.Services
             _ = Setup();
         }
 
-        private async void Setup()
+        private async Task Setup()
         {
             api = new TwitchAPI();
             TwitchKeys twitchKeys = SaveLoadService.Load<TwitchKeys>(twitchKeysFilename);
