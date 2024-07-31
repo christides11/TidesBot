@@ -51,6 +51,11 @@ namespace TidesBotDotNet.Services
             }
             Console.WriteLine("Twitch service starting up.");
             this.client = client;
+            _ = Setup();
+        }
+
+        private async void Setup()
+        {
             api = new TwitchAPI();
             TwitchKeys twitchKeys = SaveLoadService.Load<TwitchKeys>(twitchKeysFilename);
             if (twitchKeys == null)
@@ -58,9 +63,22 @@ namespace TidesBotDotNet.Services
                 twitchKeys = new TwitchKeys();
                 SaveLoadService.Save(twitchKeysFilename, twitchKeys);
             }
-            api.Settings.AccessToken = twitchKeys.accessToken;
+
             api.Settings.ClientId = twitchKeys.clientID;
             api.Settings.Secret = twitchKeys.secret;
+            api.Settings.SkipAutoServerTokenGeneration = false;
+            var gotAccessToken = await api.Auth.GetAccessTokenAsync();
+
+            if(gotAccessToken == null)
+            {
+                api.Settings.AccessToken = twitchKeys.accessToken;
+            }
+            else
+            {
+                api.Settings.AccessToken = gotAccessToken;
+                Console.WriteLine($"Got new access token: {twitchKeys.accessToken}");
+            }
+
             monitorService = new LiveStreamMonitorService(api, 180);
             monitorService.OnStreamOnline += OnStreamOnline;
             monitorService.OnStreamOffline += OnStreamOffline;
