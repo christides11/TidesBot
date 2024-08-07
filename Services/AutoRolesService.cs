@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TidesBotDotNet.Interfaces;
 
 namespace TidesBotDotNet.Services
 {
@@ -39,12 +40,12 @@ namespace TidesBotDotNet.Services
             }
 
             client.UserJoined += OnUserJoinedGuild;
-            Console.WriteLine("Auto-Role Service Initialized");
+            Logger.WriteLine("Auto-Role Service Initialized");
         }
 
         private async Task OnUserJoinedGuild(SocketGuildUser user)
         {
-            Console.WriteLine($"User {user.Username} joined {user.Guild.Name}.");
+            Logger.WriteLine($"User {user.Username} joined {user.Guild.Name}.");
             AutoRolesGuildDefinition arg = autoRoles.FirstOrDefault(x => x.guildID == user.Guild.Id);
             // Guild doesn't auto assign any roles.
             if(arg == null)
@@ -56,7 +57,7 @@ namespace TidesBotDotNet.Services
             {
                 await GiveRole(user, role);
             }
-            Console.WriteLine($"Gave {user.Username} {arg.roles.Count} roles.");
+            Logger.WriteLine($"Gave {user.Username} {arg.roles.Count} roles.");
         }
 
         public async Task GiveRole(SocketGuildUser user, string role)
@@ -69,14 +70,14 @@ namespace TidesBotDotNet.Services
                 try
                 {
                     await user.Guild.GetUser(user.Id).AddRolesAsync(new List<SocketRole>() { realRole });
-                    Console.WriteLine($"Gave {user.Username.ToString()} role.");
+                    Logger.WriteLine($"Gave {user.Username.ToString()} role.");
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Could not give user role! " + e.Message);
+                    Logger.WriteLine($"Could not give user role! " + e.Message);
                 }
             } else {
-                Console.WriteLine("User already has role");
+                Logger.WriteLine("User already has role");
             }
         }
 

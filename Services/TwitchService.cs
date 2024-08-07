@@ -46,10 +46,10 @@ namespace TidesBotDotNet.Services
         {
             if (!serviceEnabled)
             {
-                Console.WriteLine("Twitch service disabled.");
+                Logger.WriteLine("Twitch service disabled.");
                 return;
             }
-            Console.WriteLine("Twitch service starting up.");
+            Logger.WriteLine("Twitch service starting up.");
             this.client = client;
             _ = Setup();
         }
@@ -76,7 +76,7 @@ namespace TidesBotDotNet.Services
             else
             {
                 api.Settings.AccessToken = gotAccessToken;
-                Console.WriteLine($"Got new access token: {twitchKeys.accessToken}");
+                Logger.WriteLine($"Got new access token: {twitchKeys.accessToken}");
             }
 
             monitorService = new LiveStreamMonitorService(api, 180);
@@ -269,7 +269,7 @@ namespace TidesBotDotNet.Services
 
                         if (textChannel == null)
                         {
-                            Console.WriteLine($"Text channel {guild.textChannelID} in {guild.guildID} does not exist.");
+                            Logger.WriteLine($"Text channel {guild.textChannelID} in {guild.guildID} does not exist.");
                             continue;
                         }
 
@@ -316,7 +316,7 @@ namespace TidesBotDotNet.Services
                                     }
                                     catch (Exception exception)
                                     {
-                                        Console.WriteLine($"Twitch error with url: {boxArtURL}. {exception}");
+                                        Logger.WriteLine($"Twitch error with url: {boxArtURL}. {exception}");
                                     }
                                 }
                                 break;
@@ -330,7 +330,7 @@ namespace TidesBotDotNet.Services
                                     }
                                     catch (Exception exception)
                                     {
-                                        Console.WriteLine($"Twitch error with url: {boxArtURL}. {exception}");
+                                        Logger.WriteLine($"Twitch error with url: {boxArtURL}. {exception}");
                                     }
                                 }
                                 break;
@@ -342,7 +342,7 @@ namespace TidesBotDotNet.Services
                 }
             }catch(Exception exc)
             {
-                Console.WriteLine($"Exception thrown while reporting online stream. {exc.Message}");
+                Logger.WriteLine($"Exception thrown while reporting online stream. {exc}");
             }
         }
 

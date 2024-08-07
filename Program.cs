@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
 using TidesBotDotNet.Services;
 using Lavalink4NET.Tracking;
+using System.IO;
 
 namespace TidesBotDotNet
 {
@@ -18,6 +19,7 @@ namespace TidesBotDotNet
     {
         private BotDefinition botDefinition;
         private GuildsDefinition guildsDefinition;
+        private Logger logger;
 
         private string token;
 
@@ -32,6 +34,7 @@ namespace TidesBotDotNet
             }))
             .AddSingleton(botDefinition)
             .AddSingleton(guildsDefinition)
+            .AddSingleton(logger)
             .AddSingleton<IAudioService, LavalinkNode>()
             .AddSingleton<IDiscordClientWrapper, DiscordClientWrapper>()
             .AddSingleton(new LavalinkNodeOptions {
@@ -63,6 +66,8 @@ namespace TidesBotDotNet
 
         public async Task MainAsync()
         {
+            logger = new Logger();
+
             guildsDefinition = new GuildsDefinition();
 
             if (!LoadBotDefinition())
@@ -79,6 +84,7 @@ namespace TidesBotDotNet
             client.Ready += OnReadyAsync;
 
             await provider.GetRequiredService<CommandHandler>().InstallCommandsAsync();
+
 
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
@@ -109,7 +115,7 @@ namespace TidesBotDotNet
 
         private Task Log(LogMessage message)
         {
-            Console.WriteLine(message.ToString());
+            Logger.WriteLine(message.ToString());
             return Task.CompletedTask;
         }
 

@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
+using TidesBotDotNet.Interfaces;
+using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Interfaces;
 
@@ -49,6 +51,8 @@ namespace TidesBotDotNet.Services
 
         private HashSet<string> usersBeingTracked = new HashSet<string>();
 
+        private bool ticking = false;
+
         public LiveStreamMonitorService(ITwitchAPI api, int secondsBetweenChecks)
         {
             this.api = api;
@@ -82,6 +86,7 @@ namespace TidesBotDotNet.Services
         /// <returns>A list of the successfully added users.</returns>
         public async Task<List<string>> AddTrackedUsers(params string[] usernames)
         {
+            ticking = false;
             if(usernames == null || usernames.Length == 0)
             {
                 return new List<string>();
@@ -105,7 +110,7 @@ namespace TidesBotDotNet.Services
             }
             catch(Exception e)
             {
-                Console.WriteLine($"Exception thrown while adding users to the monitor. {e.Message}");
+                Logger.WriteLine($"Exception thrown while adding users to the monitor. {e}");
                 return addedUsers;
             }
         }
@@ -136,7 +141,6 @@ namespace TidesBotDotNet.Services
             usersBeingTracked.Clear();
         }
 
-        bool ticking = false;
         /// <summary>
         /// Checks which users are live, along with who has gone offline.
         /// </summary>
@@ -149,66 +153,74 @@ namespace TidesBotDotNet.Services
                 return;
             }
             ticking = true;
-            List<string> liveUsers = new List<string>();
-            var s = await GetStreams();
-            if(s != null)
+
+            try
             {
-                for(int i = 0; i < s.Length; i++)
+                List<string> liveUsers = new List<string>();
+                var s = await GetStreams();
+                if (s != null)
                 {
-                    liveUsers.Add(s[i].UserName);
-                    // User is/was live.
-                    if (LiveStreams.ContainsKey(s[i].UserName))
+                    for (int i = 0; i < s.Length; i++)
                     {
-                        // It's the same stream.
-                        if(LiveStreams[s[i].UserName].Id == s[i].Id)
+                        liveUsers.Add(s[i].UserName);
+                        // User is/was live.
+                        if (LiveStreams.ContainsKey(s[i].UserName))
                         {
-                            LiveStreams[s[i].UserName] = s[i];
-                            // Invoke event.
-                            OnStreamArgs onStreamUpdateArgs = new OnStreamArgs(s[i].UserName, s[i]);
-                            OnStreamUpdate?.Invoke(this, onStreamUpdateArgs);
-                            continue;
-                        }
-                        // Different stream and the time between the streams is at least an hour apart.
-                        else if ((s[i].StartedAt - LiveStreams[s[i].UserName].StartedAt).TotalHours > 1.0)
-                        {
-                            if (LiveStreams.TryRemove(s[i].UserName, out Stream v))
+                            // It's the same stream.
+                            if (LiveStreams[s[i].UserName].Id == s[i].Id)
                             {
-                                if (LiveStreams.TryAdd(s[i].UserName, s[i]))
+                                LiveStreams[s[i].UserName] = s[i];
+                                // Invoke event.
+                                OnStreamArgs onStreamUpdateArgs = new OnStreamArgs(s[i].UserName, s[i]);
+                                OnStreamUpdate?.Invoke(this, onStreamUpdateArgs);
+                                continue;
+                            }
+                            // Different stream and the time between the streams is at least an hour apart.
+                            else if ((s[i].StartedAt - LiveStreams[s[i].UserName].StartedAt).TotalHours > 1.0)
+                            {
+                                if (LiveStreams.TryRemove(s[i].UserName, out Stream v))
                                 {
-                                    // Invoke event.
-                                    OnStreamArgs onStreamOnlineArgs = new OnStreamArgs(s[i].UserName, s[i]);
-                                    OnStreamOnline?.Invoke(this, onStreamOnlineArgs);
+                                    if (LiveStreams.TryAdd(s[i].UserName, s[i]))
+                                    {
+                                        // Invoke event.
+                                        OnStreamArgs onStreamOnlineArgs = new OnStreamArgs(s[i].UserName, s[i]);
+                                        OnStreamOnline?.Invoke(this, onStreamOnlineArgs);
+                                    }
                                 }
                             }
+                            else
+                            {
+                                LiveStreams.Remove(s[i].UserName, out var v);
+                                LiveStreams.TryAdd(s[i].UserName, s[i]);
+                            }
                         }
+                        // User was not live before.
                         else
                         {
-                            LiveStreams.Remove(s[i].UserName, out var v);
-                            LiveStreams.TryAdd(s[i].UserName, s[i]);
+                            Logger.WriteLine($"User {s[i].UserName} was not live before.");
+                            if (LiveStreams.TryAdd(s[i].UserName, s[i]))
+                            {
+                                // Invoke event.
+                                OnStreamArgs oso = new OnStreamArgs(s[i].UserName, s[i]);
+                                OnStreamOnline?.Invoke(this, oso);
+                            }
+                            else
+                            {
+                                Logger.WriteLine($"ERROR: adding user {s[i].UserName} to livestreams list.");
+                            }
                         }
                     }
-                    // User was not live before.
-                    else
-                    {
-                        Console.WriteLine("User was not tracked before.");
-                        if (LiveStreams.TryAdd(s[i].UserName, s[i]))
-                        {
-                            // Invoke event.
-                            OnStreamArgs oso = new OnStreamArgs(s[i].UserName, s[i]);
-                            OnStreamOnline?.Invoke(this, oso);
-                        }
-                        else
-                        {
-                            Console.WriteLine($"ERROR adding user to livestreams list.");
-                        }
-                    }
-                }
 
-                Cleanup(liveUsers);
+                    Cleanup(liveUsers);
+                }
+            }catch(Exception ex)
+            {
+                Logger.WriteLine($"ERROR: error during LiveStreamMonitorService tick: {ex}");
+                api.Settings.AccessToken = String.Empty;
+                api.Settings.AccessToken = await (api as TwitchAPI).Auth.GetAccessTokenAsync();
             }
             ticking = false;
 
-            Console.WriteLine($"LSMS Tick.");
             SaveLoadService.Save(monitoredUsersFilename, LiveStreams);
         }
 
@@ -255,7 +267,7 @@ namespace TidesBotDotNet.Services
                 return liveStreams.Streams;
             }catch(Exception e)
             {
-                Console.WriteLine($"Exception thrown while fetching streams. {e.Message}");
+                Logger.WriteLine($"Exception thrown while fetching streams. {e.Message}");
                 return null;
             }
         }
