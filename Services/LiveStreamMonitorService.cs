@@ -113,8 +113,8 @@ namespace TidesBotDotNet.Services
             }
             catch (Exception e)
             {
-                Logger.WriteLine($"Exception thrown while adding users to the monitor. {e}");
-                OnTrackedUserUpdateUnsuccessful?.Invoke(this, null);
+                Logger.WriteLine($"ERROR: Exception thrown while adding users to the monitor. {e}");
+                //OnTrackedUserUpdateUnsuccessful?.Invoke(this, null);
                 return null;
             }
         }
@@ -176,10 +176,9 @@ namespace TidesBotDotNet.Services
                                 // Invoke event.
                                 OnStreamArgs onStreamUpdateArgs = new OnStreamArgs(s[i].UserName, s[i]);
                                 OnStreamUpdate?.Invoke(this, onStreamUpdateArgs);
-                                continue;
                             }
-                            // Different stream and the time between the streams is at least an hour apart.
-                            else if ((s[i].StartedAt - LiveStreams[s[i].UserName].StartedAt).TotalHours > 1.0)
+                            // Different stream and the time between the streams is at least 2 hours apart.
+                            else if ((s[i].StartedAt - LiveStreams[s[i].UserName].StartedAt).TotalHours > 2.0)
                             {
                                 if (LiveStreams.TryRemove(s[i].UserName, out Stream v))
                                 {

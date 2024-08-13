@@ -49,13 +49,13 @@ namespace TidesBotDotNet.Services
                 Logger.WriteLine("Twitch service disabled.");
                 return;
             }
-            Logger.WriteLine("Twitch service starting up.");
             this.client = client;
             _ = Setup();
         }
 
         private async Task Setup()
         {
+            Logger.WriteLine("Twitch service starting up.");
             api = new TwitchAPI();
             TwitchKeys twitchKeys = SaveLoadService.Load<TwitchKeys>(twitchKeysFilename);
             if (twitchKeys == null)
@@ -79,11 +79,17 @@ namespace TidesBotDotNet.Services
                 Logger.WriteLine($"Got new access token: {twitchKeys.accessToken}");
             }
 
+
+            LoadData();
+
+            UpdateMonitoredChannels();
+
+            await _AttemptUpdateTrackedUsers();
+            
             monitorService = new LiveStreamMonitorService(api, 180);
             monitorService.OnStreamOnline += OnStreamOnline;
             monitorService.OnStreamOffline += OnStreamOffline;
             monitorService.OnTrackedUserUpdateUnsuccessful += AttemptUpdateTrackedUsersAgain;
-            LoadData();
         }
 
         private void LoadData()
@@ -94,8 +100,6 @@ namespace TidesBotDotNet.Services
             {
                 guilds = JsonConvert.DeserializeObject<List<TwitchGuildDefinition>>(guildInfoResult);
             }
-
-            UpdateMonitoredChannels();
         }
 
         #region Module
@@ -263,27 +267,32 @@ namespace TidesBotDotNet.Services
             if (currentlyTryingAgain) return;
             currentlyTryingAgain = true;
 
+            await _AttemptUpdateTrackedUsers();
+
+            currentlyTryingAgain = false;
+        }
+
+        private async Task _AttemptUpdateTrackedUsers()
+        {
             List<string> users = new List<string>();
             foreach (var guild in guilds)
             {
                 users.AddRange(guild.users);
             }
 
-            await _AttemptUpdateTrackedUsersAgain(users, 0);
-
-            currentlyTryingAgain = false;
+            await _AttemptUpdateTrackedUsersLoop(users, 0);
         }
 
-        private async Task _AttemptUpdateTrackedUsersAgain(List<string> users, int depth)
+        private async Task _AttemptUpdateTrackedUsersLoop(List<string> users, int depth)
         {
-            Logger.WriteLine($"Attempting to update tracked users again. Attempt {depth+1}");
+            if(depth > 0) Logger.WriteLine($"Attempting to update tracked users again. Attempt {depth}");
             var r = await monitorService.AddTrackedUsers(users.Distinct().ToArray());
 
             if (depth == 10) throw new Exception("Could not update monitored channels after 10 attempts.");
             if (r == null)
             {
                 await Task.Delay(10000);
-                await _AttemptUpdateTrackedUsersAgain(users, depth+1);
+                await _AttemptUpdateTrackedUsersLoop(users, depth+1);
             }
         }
 
