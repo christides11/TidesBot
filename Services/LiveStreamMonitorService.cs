@@ -58,6 +58,8 @@ namespace TidesBotDotNet.Services
 
         public LiveStreamMonitorService(ITwitchAPI api, int secondsBetweenChecks)
         {
+            timer = new Timer(TimeSpan.FromSeconds(secondsBetweenChecks).TotalMilliseconds);
+
             this.api = api;
 
             //Load the info for streams that have been reported on.
@@ -74,9 +76,12 @@ namespace TidesBotDotNet.Services
             {
                 LiveStreams.TryAdd(key, monitoredChannels[key]);
             }
+        }
 
+        public void StartTimer(int secondsBetweenChecks)
+        {
             // Call the check with the given interval between the calls.
-            timer = new Timer(TimeSpan.FromSeconds(secondsBetweenChecks).TotalMilliseconds);
+            timer.Interval = TimeSpan.FromSeconds(secondsBetweenChecks).TotalMilliseconds;
             timer.AutoReset = true;
             timer.Elapsed += new ElapsedEventHandler(Tick);
             timer.Start();

@@ -79,17 +79,20 @@ namespace TidesBotDotNet.Services
                 Logger.WriteLine($"Got new access token: {twitchKeys.accessToken}");
             }
 
+            monitorService = new LiveStreamMonitorService(api, 120);
 
             LoadData();
 
             UpdateMonitoredChannels();
 
             await _AttemptUpdateTrackedUsers();
+            monitorService.StartTimer(120);
             
-            monitorService = new LiveStreamMonitorService(api, 180);
             monitorService.OnStreamOnline += OnStreamOnline;
             monitorService.OnStreamOffline += OnStreamOffline;
             monitorService.OnTrackedUserUpdateUnsuccessful += AttemptUpdateTrackedUsersAgain;
+
+            Logger.WriteLine("Twitch service successfully initialized.");
         }
 
         private void LoadData()
