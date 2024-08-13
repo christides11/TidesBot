@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace TidesBotDotNet.Interfaces
 {
@@ -13,39 +10,40 @@ namespace TidesBotDotNet.Interfaces
 
         public Logger()
         {
+            using (System.IO.StreamWriter file = new System.IO.StreamWriter("./tbot-output.txt"))
+            {
+                file.Write("");
+                file.Close();
+                file.Dispose();
+            }
         }
 
         public static void WriteLine(string str, bool save = true)
         {
             Console.WriteLine(str);
             LogString.Append(str).Append(Environment.NewLine);
-            if (save) SaveLog();
+            AppendLineToLog(str);
         }
 
         public static void WriteLine(object val, bool save = true)
         {
             Console.WriteLine(val);
             LogString.Append(val).Append(Environment.NewLine);
-            if (save) SaveLog();
+            AppendLineToLog(val.ToString());
         }
 
         public static void Write(string str, bool save = true)
         {
             Console.Write(str);
             LogString.Append(str);
-            if(save) SaveLog();
         }
 
-        public static void SaveLog()
+
+        public static void AppendLineToLog(string str)
         {
-            if (LogString != null && LogString.Length > 0)
+            using (StreamWriter w = File.AppendText("./tbot-output.txt"))
             {
-                using (System.IO.StreamWriter file = new System.IO.StreamWriter("./tbot-output.txt"))
-                {
-                    file.Write(LogString.ToString());
-                    file.Close();
-                    file.Dispose();
-                }
+                w.WriteLine(str);
             }
         }
     }

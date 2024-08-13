@@ -225,8 +225,8 @@ namespace TidesBotDotNet.Services
             }catch(Exception ex)
             {
                 Logger.WriteLine($"ERROR: error during LiveStreamMonitorService tick: {ex}");
-                api.Settings.AccessToken = String.Empty;
-                api.Settings.AccessToken = await (api as TwitchAPI).Auth.GetAccessTokenAsync();
+                //api.Settings.AccessToken = String.Empty;
+                //api.Settings.AccessToken = await (api as TwitchAPI).Auth.GetAccessTokenAsync();
             }
             ticking = false;
 
@@ -276,7 +276,7 @@ namespace TidesBotDotNet.Services
                 return liveStreams.Streams;
             }catch(Exception e)
             {
-                Logger.WriteLine($"Exception thrown while fetching streams. {e.Message}");
+                Logger.WriteLine($"Exception thrown while fetching streams. {e}");
                 return null;
             }
         }
