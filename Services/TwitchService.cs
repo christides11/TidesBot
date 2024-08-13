@@ -82,6 +82,7 @@ namespace TidesBotDotNet.Services
             monitorService = new LiveStreamMonitorService(api, 180);
             monitorService.OnStreamOnline += OnStreamOnline;
             monitorService.OnStreamOffline += OnStreamOffline;
+            monitorService.OnTrackedUserUpdateUnsuccessful += AttemptUpdateTrackedUsersAgain;
             LoadData();
         }
 
@@ -253,6 +254,37 @@ namespace TidesBotDotNet.Services
             _ = monitorService.AddTrackedUsers(users.Distinct().ToArray());
 
             SaveLoadService.Save(twitchGuildInfoFilename, guilds);
+        }
+
+
+        bool currentlyTryingAgain = false;
+        private async void AttemptUpdateTrackedUsersAgain(object sender, EventArgs e)
+        {
+            if (currentlyTryingAgain) return;
+            currentlyTryingAgain = true;
+
+            List<string> users = new List<string>();
+            foreach (var guild in guilds)
+            {
+                users.AddRange(guild.users);
+            }
+
+            await _AttemptUpdateTrackedUsersAgain(users, 0);
+
+            currentlyTryingAgain = false;
+        }
+
+        private async Task _AttemptUpdateTrackedUsersAgain(List<string> users, int depth)
+        {
+            Logger.WriteLine($"Attempting to update tracked users again. Attempt {depth+1}");
+            var r = await monitorService.AddTrackedUsers(users.Distinct().ToArray());
+
+            if (depth == 10) throw new Exception("Could not update monitored channels after 10 attempts.");
+            if (r == null)
+            {
+                await Task.Delay(10000);
+                await _AttemptUpdateTrackedUsersAgain(users, depth+1);
+            }
         }
 
         private async void OnStreamOnline(object sender, OnStreamArgs e)

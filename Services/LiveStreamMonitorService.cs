@@ -46,6 +46,9 @@ namespace TidesBotDotNet.Services
         /// </summary>
         public event EventHandler<OnStreamArgs> OnStreamUpdate;
 
+        public event EventHandler OnTrackedUserUpdateSuccessful;
+        public event EventHandler OnTrackedUserUpdateUnsuccessful;
+
         private ITwitchAPI api;
         private Timer timer;
 
@@ -86,7 +89,6 @@ namespace TidesBotDotNet.Services
         /// <returns>A list of the successfully added users.</returns>
         public async Task<List<string>> AddTrackedUsers(params string[] usernames)
         {
-            ticking = false;
             if(usernames == null || usernames.Length == 0)
             {
                 return new List<string>();
@@ -106,12 +108,14 @@ namespace TidesBotDotNet.Services
                     }
                     int c = 0;
                 }
+                OnTrackedUserUpdateSuccessful?.Invoke(this, null);
                 return addedUsers;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Logger.WriteLine($"Exception thrown while adding users to the monitor. {e}");
-                return addedUsers;
+                OnTrackedUserUpdateUnsuccessful?.Invoke(this, null);
+                return null;
             }
         }
 
@@ -162,7 +166,6 @@ namespace TidesBotDotNet.Services
                 {
                     for (int i = 0; i < s.Length; i++)
                     {
-                        liveUsers.Add(s[i].UserName);
                         // User is/was live.
                         if (LiveStreams.ContainsKey(s[i].UserName))
                         {
@@ -209,6 +212,8 @@ namespace TidesBotDotNet.Services
                                 Logger.WriteLine($"ERROR: adding user {s[i].UserName} to livestreams list.");
                             }
                         }
+
+                        liveUsers.Add(s[i].UserName);
                     }
 
                     Cleanup(liveUsers);
