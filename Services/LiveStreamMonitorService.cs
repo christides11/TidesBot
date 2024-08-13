@@ -185,14 +185,12 @@ namespace TidesBotDotNet.Services
                             // Different stream and the time between the streams is at least 2 hours apart.
                             else if ((s[i].StartedAt - LiveStreams[s[i].UserName].StartedAt).TotalHours > 2.0)
                             {
-                                if (LiveStreams.TryRemove(s[i].UserName, out Stream v))
+                                if (LiveStreams.TryRemove(s[i].UserName, out Stream v) && LiveStreams.TryAdd(s[i].UserName, s[i]))
                                 {
-                                    if (LiveStreams.TryAdd(s[i].UserName, s[i]))
-                                    {
-                                        // Invoke event.
-                                        OnStreamArgs onStreamOnlineArgs = new OnStreamArgs(s[i].UserName, s[i]);
-                                        OnStreamOnline?.Invoke(this, onStreamOnlineArgs);
-                                    }
+                                    Logger.WriteLine($"User {s[i].UserName} was live, but started a new stream after 2 hours.");
+                                    // Invoke event.
+                                    OnStreamArgs onStreamOnlineArgs = new OnStreamArgs(s[i].UserName, s[i]);
+                                    OnStreamOnline?.Invoke(this, onStreamOnlineArgs);
                                 }
                             }
                             else
@@ -220,7 +218,7 @@ namespace TidesBotDotNet.Services
                         liveUsers.Add(s[i].UserName);
                     }
 
-                    Cleanup(liveUsers);
+                    //Cleanup(liveUsers);
                 }
             }catch(Exception ex)
             {
