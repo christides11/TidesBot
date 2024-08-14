@@ -22,7 +22,7 @@ namespace TidesBotDotNet.Modules
                 vxt = vxtwit;
             }
 
-            [SlashCommand("colorme-status", "Check colorme permission.")]
+            //[SlashCommand("colorme-status", "Check colorme permission.")]
             public async Task ColorMe()
             {
                 await RespondAsync($"Colorme is currently {(gd.GetSettings(Context.Guild.Id).colorMe ? "enabled" : "disabled")}.", ephemeral: true);

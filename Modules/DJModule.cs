@@ -13,6 +13,7 @@ using static TidesBotDotNet.Services.DJService;
 
 namespace TidesBotDotNet.Modules
 {
+    /*
     [Group("dj", "Music-related commands.")]
     public class DJModule : InteractionModuleBase<SocketInteractionContext>
     {
@@ -199,5 +200,5 @@ namespace TidesBotDotNet.Modules
         {
             await RespondAsync("To be implemented.", ephemeral: true);
         }
-    }
+    }*/
 }
