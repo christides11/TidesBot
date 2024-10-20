@@ -111,7 +111,6 @@ namespace TidesBotDotNet.Services
                             addedUsers.Add(users.Users[i].Login);
                         }
                     }
-                    int c = 0;
                 }
                 OnTrackedUserUpdateSuccessful?.Invoke(this, null);
                 return addedUsers;
@@ -274,7 +273,7 @@ namespace TidesBotDotNet.Services
                 return liveStreams.Streams;
             }catch(Exception e)
             {
-                Logger.WriteLine($"Exception thrown while fetching streams. {e}");
+                Logger.WriteLine($"Exception thrown while fetching streams. {e}.\nList is {string.Join(",", usersBeingTracked)}");
                 return null;
             }
         }

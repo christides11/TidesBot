@@ -109,8 +109,9 @@ namespace TidesBotDotNet.Services
 
                     if (string.IsNullOrEmpty(stringWithOnlyLinks)) return;
 
-                    await msg.ModifyAsync(p => p.Flags = MessageFlags.SuppressEmbeds);
                     var botMessage = await msg.Channel.SendMessageAsync(stringWithOnlyLinks);
+                    //await msg.ModifyAsync(p => p.Flags = MessageFlags.SuppressEmbeds);
+                    _ = ForceNoEmbed(msg);
 
                     TryCleanupMessageQueue();
 
@@ -121,6 +122,17 @@ namespace TidesBotDotNet.Services
             }catch(Exception e)
             {
                 Console.WriteLine($"Error when trying to Vx link: {e}");
+            }
+        }
+
+        private async Task ForceNoEmbed(SocketUserMessage msg)
+        {
+            int attempts = 10;
+            while (attempts > 0)
+            {
+                await msg.ModifyAsync(p => p.Flags = MessageFlags.SuppressEmbeds);
+                await Task.Delay(500);
+                attempts--;
             }
         }
 

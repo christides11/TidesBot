@@ -2,7 +2,6 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
@@ -168,9 +167,16 @@ namespace TidesBotDotNet.Services
 
         public async Task<bool> TwitchUserLive(string username)
         {
-            var userList = await api.Helix.Streams.GetStreamsAsync(userLogins: new List<string>() { username });
-            if (userList == null || userList.Streams.Count() == 0) return false;
-            return true;
+            try
+            {
+                var userList = await api.Helix.Streams.GetStreamsAsync(userLogins: new List<string>() { username });
+                if (userList == null || userList.Streams.Count() == 0) return false;
+                return true;
+            }catch(Exception e)
+            {
+                Logger.WriteLine($"Error while checking live status of {username}: {e}");
+                return false;
+            }
         }
     }
 }
