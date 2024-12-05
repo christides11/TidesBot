@@ -71,12 +71,14 @@ namespace TidesBotDotNet.Services
                 var scInstagram = StringContainsInstagram(msgContent);
                 var scTiktok = StringContainsTiktok(msgContent);
                 var scShortTiktok = StringContainsShortTiktok(msgContent);
+                var scBlueSky = StringContainsBluesky(msgContent);
 
                 if (scTwitter && !guildSettings.vxTwitter && !guildSettings.fxTwitter
                     || scInstagram && !guildSettings.vxInstagram
                     || scTiktok && !guildSettings.vxTiktok
-                    || scShortTiktok && !guildSettings.vxShortTiktok) return;
-                if (!scTwitter && !scInstagram && !scTiktok && !scShortTiktok) return;
+                    || scShortTiktok && !guildSettings.vxShortTiktok
+                    || scBlueSky && !guildSettings.vxBlueSky) return;
+                if (!scTwitter && !scInstagram && !scTiktok && !scShortTiktok && !scBlueSky) return;
 
                 msgContent = GetVXedLink(msg.Author, msgContent, out var UNick, out var msgAvatar, guildSettings.fxTwitter);
 
@@ -162,6 +164,7 @@ namespace TidesBotDotNet.Services
             msgContent = msgContent.Replace("https://instagram.com", "https://ddinstagram.com");
             msgContent = msgContent.Replace("https://tiktok.com", "https://vxtiktok.com");
             msgContent = msgContent.Replace("https://vm.tiktok.com", "https://vm.tiktxk.com");
+            msgContent = msgContent.Replace("https://bsky.app/", "https://vxbsky.app/");
 
             return msgContent;
         }
@@ -172,15 +175,6 @@ namespace TidesBotDotNet.Services
             var wh = whs.Where(x => x.Name == "vxtwit").FirstOrDefault();
             if (wh == null || wh == default(RestWebhook)) wh = await (chnl as SocketTextChannel).CreateWebhookAsync("vxtwit");
             return wh;
-        }
-
-        bool StringContainsAnyValid(string msg)
-        {
-            if(StringContainsTwitter(msg)
-                || StringContainsInstagram(msg)
-                || StringContainsTiktok(msg)
-                || StringContainsShortTiktok(msg)) return true;
-            return false;
         }
 
         bool StringContainsTwitter(string msg)
@@ -206,6 +200,12 @@ namespace TidesBotDotNet.Services
         bool StringContainsShortTiktok(string msg)
         {
             if (msg.Contains("https://vm.tiktok.com")) return true;
+            return false;
+        }
+
+        bool StringContainsBluesky(string msg)
+        {
+            if (msg.Contains("https://bsky.app/")) return true;
             return false;
         }
     }

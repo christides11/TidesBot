@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace TidesBotDotNet.Interfaces
 {
@@ -12,8 +10,9 @@ namespace TidesBotDotNet.Interfaces
         public bool vxTiktok = false;
         public bool vxShortTiktok = false;
         public bool vxInstagram = false;
+        public bool vxBlueSky = false;
         public bool streamRoles = false;
-        public bool newVXMethod = false;
+        public bool newVXMethod = true;
         public HashSet<ulong> vxLinkOptOut = new HashSet<ulong>();
 
         public bool IsUserOptedOutOfXV(ulong userID)

@@ -82,6 +82,15 @@ namespace TidesBotDotNet.Modules
                 await RespondAsync($"VxInstagram is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
             }
 
+            [SlashCommand("vxbluesky", "Set vxbluesky enabled state.")]
+            [RequireOwner(Group = "Permission")]
+            public async Task VxBluesky(bool enabled)
+            {
+                gd.GetSettings(Context.Guild.Id).vxBlueSky = enabled;
+                gd.SaveSettings();
+                await RespondAsync($"VxBluesky is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
+            }
+
             [SlashCommand("streamrole", "Set streamrole enabled state.")]
             [RequireOwner(Group = "Permission")]
             public async Task StreamRole(bool enabled)

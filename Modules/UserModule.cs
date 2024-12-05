@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reactive;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
 using TidesBotDotNet.Services;
@@ -116,7 +115,7 @@ namespace TidesBotDotNet.Modules
             await AvatarTask(users, format, size);
         }
 
-        [SlashCommand("fxembed-opt-out", "Opt out of embed link fixing.")]
+        [SlashCommand("vx-opt-out", "Opt out of embed link fixing.")]
         public async Task VxOptOut()
         {
             var userID = Context.User.Id;
@@ -133,7 +132,7 @@ namespace TidesBotDotNet.Modules
             await RespondAsync("Opted out of embed fix.", ephemeral: true);
         }
 
-        [SlashCommand("fxembed-opt-in", "Opt in of embed link fixing.")]
+        [SlashCommand("vx-opt-in", "Opt in of embed link fixing.")]
         public async Task VxOptIn()
         {
             var userID = Context.User.Id;
@@ -157,9 +156,9 @@ namespace TidesBotDotNet.Modules
             await RespondAsync("", embed: output.Build());
         }
 
-        [SlashCommand("purge", "Purges an amount of messages in the current channel.")]
+        /*[SlashCommand("purge", "Purges an amount of messages in the current channel.")]
         [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
-        [RequireOwner(Group = "Permission")]
+        [RequireOwner(Group = "Permission")]*/
         public async Task Purge(int amount)
         {
             if (amount > 20) return;
@@ -194,23 +193,9 @@ namespace TidesBotDotNet.Modules
         }
 
         [SlashCommand("vx", "VX any links in the message.")]
-        public async Task AutoVX(string message)
+        public async Task AutoVX(string message, bool useFx = false)
         {
-            var msgContent = VxTwitterService.GetVXedLink(Context.User, message, out string userNickname, out string userAvatarURL, false);
-
-            RestWebhook wh = await VxTwitterService.CreateOrGetWebhook(Context.Channel as SocketGuildChannel);
-
-            var DCW = new DiscordWebhookClient(wh);
-            using (var client = DCW)
-            {
-                await client.SendMessageAsync($"{msgContent}", username: userNickname, avatarUrl: userAvatarURL);
-            }
-        }
-
-        [SlashCommand("fx", "FX any links in the message.")]
-        public async Task AutoFX(string message)
-        {
-            var msgContent = VxTwitterService.GetVXedLink(Context.User, message, out string userNickname, out string userAvatarURL, true);
+            var msgContent = VxTwitterService.GetVXedLink(Context.User, message, out string userNickname, out string userAvatarURL, useFx);
 
             RestWebhook wh = await VxTwitterService.CreateOrGetWebhook(Context.Channel as SocketGuildChannel);
 
