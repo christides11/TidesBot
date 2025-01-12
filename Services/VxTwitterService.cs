@@ -164,7 +164,7 @@ namespace TidesBotDotNet.Services
             msgContent = msgContent.Replace("https://instagram.com", "https://ddinstagram.com");
             msgContent = msgContent.Replace("https://tiktok.com", "https://vxtiktok.com");
             msgContent = msgContent.Replace("https://vm.tiktok.com", "https://vm.tiktxk.com");
-            msgContent = msgContent.Replace("https://bsky.app/", "https://vxbsky.app/");
+            msgContent = msgContent.Replace("https://bsky.app/", "https://cbsky.app/");
 
             return msgContent;
         }
