@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Rest;
-using Discord.Webhook;
 using Discord.WebSocket;
 using System;
 using System.Collections.Concurrent;
@@ -82,45 +81,28 @@ namespace TidesBotDotNet.Services
 
                 msgContent = GetVXedLink(msg.Author, msgContent, out var UNick, out var msgAvatar, guildSettings.fxTwitter);
 
-                if (guildSettings.newVXMethod == false)
+                var partsOfString = msgContent.Replace("\n", " ").Split(" ").Where(s => s.Contains("https")).ToArray();
+
+                var stringWithOnlyLinks = "";
+
+                for(int i = 0; i < partsOfString.Length; i++)
                 {
-                    if (msg.Reference != null || msg.MentionedUsers.Count > 0 || msg.MentionedRoles.Count > 0)
-                        return;
-
-                    await msg.DeleteAsync();
-
-                    RestWebhook wh = await CreateOrGetWebhook(chnl);
-
-                    var DCW = new DiscordWebhookClient(wh);
-                    using (var client = DCW)
-                    {
-                        await client.SendMessageAsync($"{msgContent}", username: UNick, avatarUrl: msgAvatar, allowedMentions: new Discord.AllowedMentions() { });
-                    }
+                    stringWithOnlyLinks += $"<{UnVXLink(partsOfString[i])}> [vx]({partsOfString[i]})";
+                    if (i < partsOfString.Length - 1) stringWithOnlyLinks += "\n";
                 }
-                else
-                {
-                    var partsOfString = msgContent.Replace("\n", " ").Split(" ").Where(s => s.Contains("https")).ToArray();
 
-                    var stringWithOnlyLinks = "";
+                if (string.IsNullOrEmpty(stringWithOnlyLinks)) return;
 
-                    for(int i = 0; i < partsOfString.Length; i++)
-                    {
-                        stringWithOnlyLinks += partsOfString[i];
-                        if (i < partsOfString.Length - 1) stringWithOnlyLinks += "\n";
-                    }
+                var botMessage = await msg.Channel.SendMessageAsync(stringWithOnlyLinks);
+                //await msg.ModifyAsync(p => p.Flags = MessageFlags.SuppressEmbeds);
+                _ = ForceNoEmbed(msg);
 
-                    if (string.IsNullOrEmpty(stringWithOnlyLinks)) return;
+                TryCleanupMessageQueue();
 
-                    var botMessage = await msg.Channel.SendMessageAsync(stringWithOnlyLinks);
-                    //await msg.ModifyAsync(p => p.Flags = MessageFlags.SuppressEmbeds);
-                    _ = ForceNoEmbed(msg);
+                lastVxedMessages.TryAdd(msg.Id, botMessage.Id);
+                messageBuffer.TryAdd(botMessage.Id, botMessage);
+                messageQueue.Add(msg.Id);
 
-                    TryCleanupMessageQueue();
-
-                    lastVxedMessages.TryAdd(msg.Id, botMessage.Id);
-                    messageBuffer.TryAdd(botMessage.Id, botMessage);
-                    messageQueue.Add(msg.Id);
-                }
             }catch(Exception e)
             {
                 Console.WriteLine($"Error when trying to Vx link: {e}");
@@ -166,6 +148,17 @@ namespace TidesBotDotNet.Services
             msgContent = msgContent.Replace("https://vm.tiktok.com", "https://vm.tiktxk.com");
             msgContent = msgContent.Replace("https://bsky.app/", "https://cbsky.app/");
 
+            return msgContent;
+        }
+
+        public static string UnVXLink(string msgContent)
+        {
+            msgContent = msgContent.Replace("https://fixvx.com", "https://x.com");
+            msgContent = msgContent.Replace("https://fixupx.com", "https://x.com");
+            msgContent = msgContent.Replace("https://ddinstagram.com", "https://instagram.com");
+            msgContent = msgContent.Replace("https://vxtiktok.com", "https://tiktok.com");
+            msgContent = msgContent.Replace("https://vm.tiktxk.com", "https://vm.tiktok.com");
+            msgContent = msgContent.Replace("https://cbsky.app/", "https://bsky.app/");
             return msgContent;
         }
 

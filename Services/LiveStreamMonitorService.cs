@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using TidesBotDotNet.Interfaces;
-using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Interfaces;
 
@@ -181,17 +179,20 @@ namespace TidesBotDotNet.Services
                                 OnStreamArgs onStreamUpdateArgs = new OnStreamArgs(s[i].UserName, s[i]);
                                 OnStreamUpdate?.Invoke(this, onStreamUpdateArgs);
                             }
+                            /*
                             // Different stream and the time between the streams is at least 2 hours apart.
                             else if ((s[i].StartedAt - LiveStreams[s[i].UserName].StartedAt).TotalHours > 2.0)
                             {
-                                if (LiveStreams.TryRemove(s[i].UserName, out Stream v) && LiveStreams.TryAdd(s[i].UserName, s[i]))
+                                LiveStreams.TryRemove(s[i].UserName, out Stream v);
+
+                                if (LiveStreams.TryAdd(s[i].UserName, s[i]))
                                 {
                                     Logger.WriteLine($"User {s[i].UserName} was live, but started a new stream after 2 hours.");
                                     // Invoke event.
                                     OnStreamArgs onStreamOnlineArgs = new OnStreamArgs(s[i].UserName, s[i]);
                                     OnStreamOnline?.Invoke(this, onStreamOnlineArgs);
                                 }
-                            }
+                            }*/
                             else
                             {
                                 LiveStreams.Remove(s[i].UserName, out var v);
