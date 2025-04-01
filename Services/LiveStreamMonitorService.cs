@@ -92,7 +92,7 @@ namespace TidesBotDotNet.Services
         /// <returns>A list of the successfully added users.</returns>
         public async Task<List<string>> AddTrackedUsers(params string[] usernames)
         {
-            if(usernames == null || usernames.Length == 0)
+            if (usernames == null || usernames.Length == 0)
             {
                 return new List<string>();
             }
@@ -104,6 +104,11 @@ namespace TidesBotDotNet.Services
                 {
                     for (int i = 0; i < users.Users.Count(); i++)
                     {
+                        if (string.IsNullOrWhiteSpace(users.Users[i].Login))
+                        {
+                            Logger.WriteLine($"WARNING: Found user with null or empty login name. Assumed index of {i}. List: {string.Join(",", usernames.ToList())}");
+                            continue;
+                        }
                         if (usersBeingTracked.Add(users.Users[i].Login))
                         {
                             addedUsers.Add(users.Users[i].Login);
@@ -139,6 +144,7 @@ namespace TidesBotDotNet.Services
                     }
                 }
             }
+            usersBeingTracked.RemoveWhere(x => string.IsNullOrWhiteSpace(x));
             return removedUsers;
         }
 
@@ -179,7 +185,6 @@ namespace TidesBotDotNet.Services
                                 OnStreamArgs onStreamUpdateArgs = new OnStreamArgs(s[i].UserName, s[i]);
                                 OnStreamUpdate?.Invoke(this, onStreamUpdateArgs);
                             }
-                            /*
                             // Different stream and the time between the streams is at least 2 hours apart.
                             else if ((s[i].StartedAt - LiveStreams[s[i].UserName].StartedAt).TotalHours > 2.0)
                             {
@@ -192,7 +197,7 @@ namespace TidesBotDotNet.Services
                                     OnStreamArgs onStreamOnlineArgs = new OnStreamArgs(s[i].UserName, s[i]);
                                     OnStreamOnline?.Invoke(this, onStreamOnlineArgs);
                                 }
-                            }*/
+                            }
                             else
                             {
                                 LiveStreams.Remove(s[i].UserName, out var v);
