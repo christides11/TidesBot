@@ -100,7 +100,7 @@ namespace TidesBotDotNet.Modules
                 await RespondAsync($"StreamRole is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
             }
 
-            [SlashCommand("newVxMethod", "Use the new vx method.")]
+            [SlashCommand("newvxmethod", "Use the new vx method.")]
             [RequireOwner(Group = "Permission")]
             public async Task UseNewVXMethod(bool enabled)
             {

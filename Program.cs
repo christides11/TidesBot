@@ -2,16 +2,17 @@
 using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
-using Lavalink4NET.DiscordNet;
-using Lavalink4NET;
+//using Lavalink4NET.DiscordNet;
+//using Lavalink4NET;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 using TidesBotDotNet.Interfaces;
 using TidesBotDotNet.Services;
-using Lavalink4NET.Tracking;
+//using Lavalink4NET.Tracking;
 using System.IO;
+//using Lavalink4NET.Clients;
 
 namespace TidesBotDotNet
 {
@@ -35,9 +36,9 @@ namespace TidesBotDotNet
             .AddSingleton(botDefinition)
             .AddSingleton(guildsDefinition)
             .AddSingleton(logger)
-            .AddSingleton<IAudioService, LavalinkNode>()
-            .AddSingleton<IDiscordClientWrapper, DiscordClientWrapper>()
-            .AddSingleton(new LavalinkNodeOptions {
+            //.AddSingleton<IAudioService, LavalinkNode>()
+            //.AddSingleton<IDiscordClientWrapper, DiscordClientWrapper>()
+            /*.AddSingleton(new LavalinkNodeOptions {
                 RestUri = "http://localhost:2333/",
                 WebSocketUri = "ws://localhost:2333/",
                 Password = "youshallnotpass"
@@ -46,8 +47,8 @@ namespace TidesBotDotNet
                 DisconnectDelay = TimeSpan.FromSeconds(10),
                 PollInterval = TimeSpan.FromSeconds(4),
                 TrackInactivity = true
-             })
-            .AddSingleton<InactivityTrackingService>()
+             })*/
+            //.AddSingleton<InactivityTrackingService>()
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
             .AddSingleton<Fergun.Interactive.InteractiveService>()
             .AddSingleton<CommandHandler>()
@@ -56,7 +57,7 @@ namespace TidesBotDotNet
             .AddSingleton<VxTwitterService>()
             .AddSingleton<TwitchService>()
             .AddSingleton<StreamRoleService>()
-            .AddSingleton<DJService>()
+            //.AddSingleton<DJService>()
             .BuildServiceProvider();
 
         private IServiceProvider provider;
@@ -122,7 +123,7 @@ namespace TidesBotDotNet
         private async Task OnReadyAsync()
         {
             await provider.GetRequiredService<InteractionService>().RegisterCommandsGloballyAsync(true);
-            await provider.GetRequiredService<IAudioService>().InitializeAsync();
+            //await provider.GetRequiredService<IAudioService>().InitializeAsync();
         }
     }
 }

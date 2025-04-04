@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿/*
+using Discord;
 using Discord.Interactions;
 using Fergun.Interactive;
 using Fergun.Interactive.Pagination;
@@ -9,7 +10,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TidesBotDotNet.Services;
 using TwitchLib.Api.Helix.Models.Soundtrack;
-using static TidesBotDotNet.Services.DJService;
+using static TidesBotDotNet.Services.DJService;*/
 
 namespace TidesBotDotNet.Modules
 {

@@ -1,4 +1,4 @@
-﻿using Discord;
+﻿/*using Discord;
 using Discord.Audio;
 using Discord.Rest;
 using Discord.WebSocket;
@@ -225,3 +225,4 @@ namespace TidesBotDotNet.Services
         }
     }
 }
+*/
