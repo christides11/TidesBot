@@ -50,7 +50,7 @@ namespace TidesBotDotNet.Services
         private ITwitchAPI api;
         private Timer timer;
 
-        private HashSet<string> usersBeingTracked = new HashSet<string>();
+        private ConcurrentDictionary<string, int> usersBeingTracked = new(); // Value doesn't matter, just need a concurrent collection with unique values.
 
         private bool ticking = false;
 
@@ -109,7 +109,7 @@ namespace TidesBotDotNet.Services
                             Logger.WriteLine($"WARNING: Found user with null or empty login name. Assumed index of {i}. List: {string.Join(",", usernames.ToList())}");
                             continue;
                         }
-                        if (usersBeingTracked.Add(users.Users[i].Login))
+                        if (usersBeingTracked.TryAdd(users.Users[i].Login, 0))
                         {
                             addedUsers.Add(users.Users[i].Login);
                         }
@@ -136,7 +136,7 @@ namespace TidesBotDotNet.Services
             List<string> removedUsers = new List<string>();
             for(int i = 0; i < usernames.Count(); i++)
             {
-                if (usersBeingTracked.Remove(usernames[i]))
+                if (usersBeingTracked.TryRemove(usernames[i], out _))
                 {
                     if (LiveStreams.TryRemove(usernames[i], out Stream v))
                     {
@@ -144,7 +144,6 @@ namespace TidesBotDotNet.Services
                     }
                 }
             }
-            usersBeingTracked.RemoveWhere(x => string.IsNullOrWhiteSpace(x));
             return removedUsers;
         }
 
@@ -273,11 +272,9 @@ namespace TidesBotDotNet.Services
                 return null;
             }
 
-            usersBeingTracked.RemoveWhere(x => string.IsNullOrWhiteSpace(x));
-
             try
             {
-                GetStreamsResponse liveStreams = await api.Helix.Streams.GetStreamsAsync(first: 100, userLogins: usersBeingTracked.ToList());
+                GetStreamsResponse liveStreams = await api.Helix.Streams.GetStreamsAsync(first: 100, userLogins: usersBeingTracked.Keys.ToList());
                 return liveStreams.Streams;
             }catch(Exception e)
             {
