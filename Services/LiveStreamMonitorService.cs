@@ -273,6 +273,8 @@ namespace TidesBotDotNet.Services
                 return null;
             }
 
+            usersBeingTracked.RemoveWhere(x => string.IsNullOrWhiteSpace(x));
+
             try
             {
                 GetStreamsResponse liveStreams = await api.Helix.Streams.GetStreamsAsync(first: 100, userLogins: usersBeingTracked.ToList());
