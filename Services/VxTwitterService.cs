@@ -87,7 +87,16 @@ namespace TidesBotDotNet.Services
 
                 for(int i = 0; i < partsOfString.Length; i++)
                 {
-                    stringWithOnlyLinks += $"<{UnVXLink(partsOfString[i])}> [vx]({partsOfString[i]})";
+                    var rawLink = UnVXLink(partsOfString[i]);
+
+                    if (IsLinkTwitter(rawLink))
+                    {
+                        stringWithOnlyLinks += $"<{rawLink}> [embed]({partsOfString[i]}) [xcancel](<{XCancelLink(rawLink)}>)";
+                    }
+                    else
+                    {
+                        stringWithOnlyLinks += $"<{rawLink}> [embed]({partsOfString[i]})";
+                    }
                     if (i < partsOfString.Length - 1) stringWithOnlyLinks += "\n";
                 }
 
@@ -160,6 +169,17 @@ namespace TidesBotDotNet.Services
             msgContent = msgContent.Replace("https://vm.tiktxk.com", "https://vm.tiktok.com");
             msgContent = msgContent.Replace("https://cbsky.app/", "https://bsky.app/");
             return msgContent;
+        }
+
+        public static string XCancelLink(string msgContent)
+        {
+            msgContent = msgContent.Replace("https://x.com", "https://xcancel.com");
+            return msgContent;
+        }
+
+        public static bool IsLinkTwitter(string linkString)
+        {
+            return linkString.Contains("https://x.com");
         }
 
         public static async Task<RestWebhook> CreateOrGetWebhook(SocketGuildChannel chnl)
