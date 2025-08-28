@@ -64,15 +64,6 @@ namespace TidesBotDotNet.Modules
                 await RespondAsync($"VxTiktok is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
             }
 
-            [SlashCommand("vxstiktok", "Set vxtiktok (mobile link) enabled state.")]
-            [RequireOwner(Group = "Permission")]
-            public async Task VxSTiktok(bool enabled)
-            {
-                gd.GetSettings(Context.Guild.Id).vxShortTiktok = enabled;
-                gd.SaveSettings();
-                await RespondAsync($"VxSTiktok is now " + (enabled ? "enabled" : "disabled") + " in this guild.", ephemeral: true);
-            }
-
             [SlashCommand("vxinstagram", "Set vxinstagram enabled state.")]
             [RequireOwner(Group = "Permission")]
             public async Task VxInstagram(bool enabled)

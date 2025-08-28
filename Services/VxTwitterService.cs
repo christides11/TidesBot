@@ -69,15 +69,13 @@ namespace TidesBotDotNet.Services
                 var scTwitter = StringContainsTwitter(msgContent);
                 var scInstagram = StringContainsInstagram(msgContent);
                 var scTiktok = StringContainsTiktok(msgContent);
-                var scShortTiktok = StringContainsShortTiktok(msgContent);
                 var scBlueSky = StringContainsBluesky(msgContent);
 
                 if (scTwitter && !guildSettings.vxTwitter && !guildSettings.fxTwitter
                     || scInstagram && !guildSettings.vxInstagram
                     || scTiktok && !guildSettings.vxTiktok
-                    || scShortTiktok && !guildSettings.vxShortTiktok
                     || scBlueSky && !guildSettings.vxBlueSky) return;
-                if (!scTwitter && !scInstagram && !scTiktok && !scShortTiktok && !scBlueSky) return;
+                if (!scTwitter && !scInstagram && !scTiktok && !scBlueSky) return;
 
                 msgContent = GetVXedLink(msg.Author, msgContent, out var UNick, out var msgAvatar, guildSettings.fxTwitter);
 
@@ -152,9 +150,8 @@ namespace TidesBotDotNet.Services
             msgContent = msgContent.Replace("https://twitter.com", "https://x.com");
             if(!useFxInstead) msgContent = msgContent.Replace("https://x.com", "https://fixvx.com");
             else msgContent = msgContent.Replace("https://x.com", "https://fixupx.com");
-            msgContent = msgContent.Replace("https://instagram.com", "https://ddinstagram.com");
-            msgContent = msgContent.Replace("https://tiktok.com", "https://vxtiktok.com");
-            msgContent = msgContent.Replace("https://vm.tiktok.com", "https://vm.tiktxk.com");
+            msgContent = msgContent.Replace("https://instagram.com", "https://kkinstagram.com");
+            msgContent = msgContent.Replace("https://vt.tiktok.com", "https://vm.tiktok.com");
             msgContent = msgContent.Replace("https://bsky.app/", "https://cbsky.app/");
 
             return msgContent;
@@ -164,9 +161,8 @@ namespace TidesBotDotNet.Services
         {
             msgContent = msgContent.Replace("https://fixvx.com", "https://x.com");
             msgContent = msgContent.Replace("https://fixupx.com", "https://x.com");
-            msgContent = msgContent.Replace("https://ddinstagram.com", "https://instagram.com");
-            msgContent = msgContent.Replace("https://vxtiktok.com", "https://tiktok.com");
-            msgContent = msgContent.Replace("https://vm.tiktxk.com", "https://vm.tiktok.com");
+            msgContent = msgContent.Replace("https://kkinstagram.com", "https://instagram.com");
+            msgContent = msgContent.Replace("https://vm.tiktok.com", "https://vt.tiktok.com");
             msgContent = msgContent.Replace("https://cbsky.app/", "https://bsky.app/");
             return msgContent;
         }
@@ -200,19 +196,13 @@ namespace TidesBotDotNet.Services
         bool StringContainsInstagram(string msg)
         {
             if (msg.Contains("https://instagram.com")
-                && (msg.Contains("reel/") || msg.Contains("reels/") || msg.Contains("/p/") ) ) return true;
+                && ( msg.Contains("reel/") || msg.Contains("reels/") || msg.Contains("/p/") ) ) return true;
             return false;
         }
 
         bool StringContainsTiktok(string msg)
         {
-            if (msg.Contains("https://tiktok.com") && msg.Contains("video")) return true;
-            return false;
-        }
-
-        bool StringContainsShortTiktok(string msg)
-        {
-            if (msg.Contains("https://vm.tiktok.com")) return true;
+            if (msg.Contains("https://vt.tiktok.com")) return true;
             return false;
         }
 

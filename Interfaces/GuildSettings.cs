@@ -8,7 +8,6 @@ namespace TidesBotDotNet.Interfaces
         public bool vxTwitter = false;
         public bool fxTwitter = false;
         public bool vxTiktok = false;
-        public bool vxShortTiktok = false;
         public bool vxInstagram = false;
         public bool vxBlueSky = false;
         public bool streamRoles = false;
