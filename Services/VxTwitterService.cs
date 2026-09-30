@@ -61,7 +61,8 @@ namespace TidesBotDotNet.Services
                     || msg.Content.Length >= 500
                     || guildSettings.IsUserOptedOutOfXV(msg.Author.Id)
                     || (!msg.Content.Contains(".com") && !msg.Content.Contains(".app"))
-                    || !msg.Content.Contains("https://")) return;
+                    || !msg.Content.Contains("https://")
+                    || msg.Content.Contains("||")) return;
 
                 var msgContent = msg.Content;
                 msgContent = msgContent.Replace("www.", "");
