@@ -62,7 +62,6 @@ namespace TidesBotDotNet.Services
                     || guildSettings.IsUserOptedOutOfXV(msg.Author.Id)
                     || (!msg.Content.Contains(".com") && !msg.Content.Contains(".app"))
                     || !msg.Content.Contains("https://")
-                    || !msg.Content.Contains(" https://")
                     || msg.Content.Contains("||")
                     || chnl.Name.ToLower().Contains("spoiler")) return;
 
@@ -89,6 +88,9 @@ namespace TidesBotDotNet.Services
                 for(int i = 0; i < partsOfString.Length; i++)
                 {
                     var rawLink = UnVXLink(partsOfString[i]);
+
+                    if (!rawLink.StartsWith("https://"))
+                        continue;
 
                     if (IsLinkTwitter(rawLink))
                     {
